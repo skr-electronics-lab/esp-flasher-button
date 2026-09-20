@@ -3555,6 +3555,24 @@
       if (progEl) progEl.style.display = 'none';
       const pillsEl = this._modal?.querySelector('#__efb-pills');
       if (pillsEl) pillsEl.style.display = 'none';
+      const settingsEl = this._modal?.querySelector('#__efb-settings');
+      if (settingsEl) settingsEl.style.display = 'none';
+      const logEl = this._modal?.querySelector('#__efb-log');
+      if (logEl) logEl.style.display = 'none';
+      const errboxEl = this._modal?.querySelector('#__efb-errbox');
+      if (errboxEl) errboxEl.style.display = 'none';
+      const fwCard = this._modal?.querySelector('.__efb-fwcard-wrap');
+      if (fwCard) fwCard.style.display = 'none';
+      const eraseRow = this._modal?.querySelector('#__efb-erase-row');
+      if (eraseRow) eraseRow.style.display = 'none';
+      const baudRow = this._modal?.querySelector('#__efb-baud-row');
+      if (baudRow) baudRow.style.display = 'none';
+      const vsec = this._modal?.querySelector('#__efb-vsection');
+      if (vsec) vsec.style.display = 'none';
+      const infoEl = this._modal?.querySelector('#__efb-info');
+      if (infoEl) infoEl.style.display = 'none';
+      const eraseLabel = this._modal?.querySelector('.__efb-confirm-check-label');
+      if (eraseLabel) eraseLabel.style.display = 'none';
 
       this._setStatusDot('green', '<strong>Flash complete!</strong> Device is running new firmware.');
       this._setTitle(this._manifest?.name || 'Firmware', 'Installation complete');
@@ -3564,15 +3582,17 @@
         successEl.style.display = 'block';
         const showWifi = this._isWifiEnabled;
         successEl.innerHTML = `
-          <div class="__efb-succ-wrap">
-            <div class="__efb-succ-icon-ring">
-              <svg viewBox="0 0 52 52">
-                <circle cx="26" cy="26" r="23"/>
-                <path d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+          <div class="__efb-succ">
+            <div class="__efb-succ-head">
+              <svg class="__efb-checkmark" viewBox="0 0 52 52" fill="none">
+                <circle class="__efb-check-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="__efb-check-path" d="M14 27l7 7 16-16" fill="none"/>
               </svg>
+              <div>
+                <div class="__efb-succ-title">Firmware Installed!</div>
+                <div class="__efb-succ-sub">Device flashed successfully and rebooted.</div>
+              </div>
             </div>
-            <div class="__efb-succ-title">Firmware Installed!</div>
-            <div class="__efb-succ-sub">Device flashed successfully and rebooted.</div>
             <div class="__efb-succ-meta">
               <span>${this._esc(chip || '—')}</span>
               <span>${this._esc(flashSize)}</span>
