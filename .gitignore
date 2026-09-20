@@ -1,9 +1,19 @@
-# Dependencies & builds
+# Dependencies & package managers
 node_modules/
-.wrangler/
 dist/
 
-# OS files
+# PlatformIO & embedded builds
+.pio/
+*/.pio/
+*.o
+*.elf
+*.bin.gz
+
+# Cloudflare & local caches
+.wrangler/
+
+# OS and Editor files
 .DS_Store
 Thumbs.db
 *.log
+.vscode/

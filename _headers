@@ -1,8 +1,0 @@
-/*
-  Access-Control-Allow-Origin: *
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
-
-/firmwares/*
-  Access-Control-Allow-Origin: *
-  Cache-Control: public, max-age=31536000, immutable

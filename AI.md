@@ -1,18 +1,21 @@
-You are helping a user integrate, deploy, or troubleshoot **ESP Flash Button** — an embeddable web component that lets users flash ESP32/ESP8266 firmware directly from the browser using the Web Serial API.
+You are helping a user integrate, deploy, or troubleshoot **ESP Flasher Button** — an embeddable web component that lets users flash ESP32/ESP8266 firmware directly from the browser using the Web Serial API.
 
 ## What it does
-- Renders a `<esp-flash-button>` custom element on any HTML page
-- On click, opens a modal that fetches a firmware manifest JSON from a URL
+- Renders a `<esp-flasher-button>` (or `<esp-flash-button>`) custom element on any HTML page
+- Supports direct GitHub Releases flashing via `github="owner/repo"` (auto-discovering latest releases and `.bin` assets)
+- On click, opens a modal that fetches a firmware manifest JSON from a URL or GitHub
 - Lets the user select a firmware build, connect an ESP device via USB serial, and flash it
 - Shows real-time progress with MD5 verification after write
 - Includes a built-in serial monitor for debugging connected devices
+- Includes Improv-Wi-Fi provisioning over USB serial
+- Smart Baud fallback on noisy cable timeouts
 
 ## Key architecture
-- **Single-file JS component**: `esp-flash-button.js` (IIFE, ~2480 lines)
+- **Single-file JS component**: `esp-flasher-button.js` / `esp-flash-button.js` (IIFE)
 - **No dependencies** beyond esptool-js (loaded dynamically from unpkg CDN)
 - **Shadow DOM** for the trigger button only; the modal and serial monitor are injected into `document.body`
 - **CSS variables** for theming — dark theme by default, light theme override via `:root[data-theme="light"]`
-- **Deployed** on Cloudflare Pages at `esp-flash-button.pages.dev`
+- **Hosted** on GitHub Pages at `https://skr-electronics-lab.github.io/esp-flasher-button/`
 - **Flash settings are manifest-driven** — flash mode (`qio`/`dio`/...), frequency, size, baud, erase and compression are resolved per-build from `flashSettings` instead of being hardcoded to QIO fast-flashing
 
 ## Attributes
@@ -111,10 +114,10 @@ Precedence (most specific wins): user UI selection > build.flashSettings > manif
 - Supports baud rate selection (including `74880` for ESP Boot ROM), line timestamps (`TS`), DTR/RTS signals, line ending config
 - Uses the same Web Serial port as the flash session (with clean disconnect/reconnect)
 
-## Deployment (Cloudflare Pages)
-- Build command: `wrangler pages deploy . --project-name esp-flash-button`
-- All files served from the project root
-- Custom domain or `esp-flash-button.pages.dev`
+## Deployment (GitHub Pages)
+- Hosted directly from the `main` branch of `https://github.com/skr-electronics-lab/esp-flasher-button`
+- Live site & demo: `https://skr-electronics-lab.github.io/esp-flasher-button/`
+- Component script: `https://skr-electronics-lab.github.io/esp-flasher-button/esp-flasher-button.js`
 
 ## Common issues
 1. **Serial monitor shows no CSS / only text**: Ensure the style element's CSS variables are on `:root` or the overlay elements. The `@import` for Google Fonts must be the very first rule in the `<style>` element.

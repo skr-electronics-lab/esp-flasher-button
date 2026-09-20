@@ -1,0 +1,37 @@
+{
+  "name": "esp-flasher-button",
+  "version": "1.2.0",
+  "description": "Modern, embeddable ESP32/ESP8266 in-browser firmware flashing & Web Serial monitor web component powered by esptool-js",
+  "main": "esp-flasher-button.js",
+  "module": "esp-flasher-button.js",
+  "keywords": [
+    "esp32",
+    "esp8266",
+    "esp32-s3",
+    "esp32-c3",
+    "esptool",
+    "web-serial",
+    "flasher",
+    "web-component",
+    "custom-elements",
+    "firmware-installer",
+    "improv-wifi",
+    "serial-monitor"
+  ],
+  "author": "SK Raihan (SKR Electronics Lab) <skrelectronicslab@gmail.com> (https://youtube.com/@skr_electronics_lab)",
+  "license": "MIT",
+  "homepage": "https://skr-electronics-lab.github.io/esp-flasher-button/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skr-electronics-lab/esp-flasher-button.git"
+  },
+  "bugs": {
+    "url": "https://github.com/skr-electronics-lab/esp-flasher-button/issues"
+  },
+  "files": [
+    "esp-flasher-button.js",
+    "esp-flash-button.js",
+    "README.md",
+    "LICENSE"
+  ]
+}

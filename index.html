@@ -3,22 +3,22 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ESP Flash Button — Embeddable ESP32/ESP8266 Browser Firmware Installer</title>
-<meta name="description" content="ESP Flash Button is a free, open-source web component that lets you add a one-click firmware installer to any website. Flash ESP32, ESP8266, and ESP32-S3 devices directly from the browser. No drivers, no IDE, no boot button hold." />
-<meta name="keywords" content="ESP32 firmware installer, ESP8266 web flasher, browser-based ESP flashing, embeddable firmware installer, ESP Web Tools alternative, SKR Electronics Lab, esptool-js, web serial ESP32" />
+<title>ESP Flasher Button — Embeddable ESP32/ESP8266 Browser Firmware Installer</title>
+<meta name="description" content="ESP Flasher Button is a free, open-source web component that lets you add a one-click firmware installer to any website. Flash ESP32, ESP8266, and ESP32-S3 devices directly from the browser. No drivers, no IDE, no boot button hold." />
+<meta name="keywords" content="ESP32 firmware installer, ESP8266 web flasher, browser-based ESP flashing, embeddable firmware installer, ESP Web Tools alternative, SKR Electronics Lab, esptool-js, web serial ESP32, esp-flasher-button" />
 <meta name="author" content="SKR Electronics Lab" />
-<meta property="og:title" content="ESP Flash Button — One-Click ESP32 Firmware Installer for Your Website" />
+<meta property="og:title" content="ESP Flasher Button — One-Click ESP32 Firmware Installer for Your Website" />
 <meta property="og:description" content="Embed a firmware flasher on your blog or product page. Your visitors flash ESP32/ESP8266/ESP32-S3 devices directly in the browser — no tools, no drivers, no hassle." />
-<meta property="og:url" content="https://esp-flash-button.pages.dev" />
+<meta property="og:url" content="https://skr-electronics-lab.github.io/esp-flasher-button/" />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="ESP Flash Button — ESP32 Firmware Installer for Your Site" />
+<meta name="twitter:title" content="ESP Flasher Button — ESP32 Firmware Installer for Your Site" />
 <meta name="twitter:description" content="Add a one-click ESP32/ESP8266 firmware flasher to any webpage. No build tools, no dependencies." />
 <meta name="theme-color" id="meta-theme" content="#07070a" />
-<link rel="canonical" href="https://esp-flash-button.pages.dev" />
+<link rel="canonical" href="https://skr-electronics-lab.github.io/esp-flasher-button/" />
 
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ESP Flash Button","applicationCategory":"DeveloperApplication","operatingSystem":"Web (Chrome, Edge, Opera)","browserRequirements":"Web Serial API","description":"Embeddable web component that adds a one-click ESP32/ESP8266 firmware installer to any website.","author":{"@type":"Organization","name":"SKR Electronics Lab","url":"https://skrelectronicslab.com"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"softwareVersion":"1.0"}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ESP Flasher Button","applicationCategory":"DeveloperApplication","operatingSystem":"Web (Chrome, Edge, Opera)","browserRequirements":"Web Serial API","description":"Embeddable web component that adds a one-click ESP32/ESP8266 firmware installer to any website.","author":{"@type":"Organization","name":"SKR Electronics Lab","url":"https://github.com/skr-electronics-lab"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"softwareVersion":"1.2"}
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1046,7 +1046,7 @@ td code { font-family: var(--mono); font-size: 11px; background: var(--surf2); p
       <div class="ai-desc">
         This prompt contains the full technical specification. Paste into any AI before asking coding or troubleshooting questions.
       </div>
-      <div class="ai-prompt-box" id="ai-prompt-text">ESP Flash Button is a free, open-source, single-file web component (IIFE pattern, ~2280+ lines) that lets website visitors flash ESP32/ESP8266/ESP32-S3 microcontrollers directly from the browser using the Web Serial API and esptool-js (loaded dynamically from unpkg CDN). No build step, no npm, no framework required. Deployed on Cloudflare Pages at esp-flash-button.pages.dev.
+      <div class="ai-prompt-box" id="ai-prompt-text">ESP Flasher Button is a free, open-source, zero-dependency web component that lets website visitors flash ESP32/ESP8266/ESP32-S3/C3 microcontrollers directly from the browser using the Web Serial API and esptool-js (loaded dynamically from unpkg CDN). Hosted on GitHub Pages at https://skr-electronics-lab.github.io/esp-flasher-button/.
 
 ARCHITECTURE:
 - Shadow DOM used ONLY for the trigger button; the modal dialog and serial monitor are injected into document.body
@@ -1186,17 +1186,13 @@ DOM EVENTS: flash-success (detail: {chip, flashSize, duration, filesCount}), fla
 
 SUPPORTED USB-SERIAL CHIPS: CP2102, CP2104, CH340, CH341, FTDI FT232R, CDC-ACM. Requires Chrome 89+/Edge 89+/Opera 76+ on desktop.
 
-DEPLOYMENT: wrangler pages deploy . --project-name esp-flash-button --branch main. Production URL: esp-flash-button.pages.dev. Script loaded from: https://esp-flash-button.pages.dev/esp-flash-button.js
+DEPLOYMENT: Hosted directly on GitHub Pages at https://skr-electronics-lab.github.io/esp-flasher-button/. Script loaded from: https://skr-electronics-lab.github.io/esp-flasher-button/esp-flasher-button.js
 
 LANDING PAGE: index.html at project root. Contains hero, demo (live component + theme cards), AI prompt section, usage guide, features grid, serial monitor simulation (with animated boot sequence + live output), comparison table, FAQ accordion, supported chips, CORS setup guide. Includes custom cursor with trailing particles, circuit board background animation, scroll-reveal animations, code copy buttons.
 
 MODAL THEME: When button theme="light" is used, the modal and serial monitor render with a light theme (white backgrounds, blue accent #3b82f6, slate text). All other button themes (red/dark/green/ghost/minimal) use the dark modal theme (dark backgrounds, red accent #e03030). The modal theme switch is controlled by data-theme="light" on the overlay element, which triggers CSS variable overrides in the :root[data-theme="light"] section.
 
-DEMO SECTION: Landing page demo shows both modal themes side by side — "Dark Theme" (theme="red" button) and "Light Theme" (theme="light" button). Users can click either to see the flasher modal in dark or light mode.
-
-ANTI-COPY: JS is obfuscated via javascript-obfuscator (control flow flattening, dead code injection, self-defending, string array with base64 encoding, mangled identifiers, object key transformation) into dist/esp-flash-button.js (231KB). Source at root/esp-flash-button.js (113KB). Copy event blocked on non-code elements. The dist/ folder contains all production files.
-
-DEPLOYMENT: `wrangler pages deploy dist --project-name esp-flash-button --branch main`. The dist/ folder contains the complete production build (obfuscated JS, index.html, demo-manifest.json, _headers, _redirects). Root folder contains source files for development.</div>
+DEMO SECTION: Landing page demo shows both modal themes side by side — "Dark Theme" (theme="red" button) and "Light Theme" (theme="light" button). Users can click either to see the flasher modal in dark or light mode.</div>
       <div class="ai-copy-row">
         <button class="ai-copy-btn" id="ai-copy-btn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -1307,10 +1303,10 @@ DEPLOYMENT: `wrangler pages deploy dist --project-name esp-flash-button --branch
       <div class="step-badge">1</div>
       <div class="step-body">
         <div class="step-title">Add the script tag</div>
-        <div class="step-desc">Load the component from Cloudflare CDN. One tag, zero dependencies, works in any HTML context.</div>
+        <div class="step-desc">Load the component directly from GitHub Pages CDN. One tag, zero dependencies, works in any HTML context.</div>
         <div class="code-wrap">
           <pre><span class="c-com">&lt;!-- Add once, anywhere in your page --&gt;</span>
-<span class="c-tag">&lt;script</span> <span class="c-attr">src</span>=<span class="c-str">"https://esp-flash-button.pages.dev/esp-flash-button.js"</span><span class="c-tag">&gt;&lt;/script&gt;</span></pre>
+<span class="c-tag">&lt;script</span> <span class="c-attr">type</span>=<span class="c-str">"module"</span> <span class="c-attr">src</span>=<span class="c-str">"https://skr-electronics-lab.github.io/esp-flasher-button/esp-flasher-button.js"</span><span class="c-tag">&gt;&lt;/script&gt;</span></pre>
           <button class="cpy-btn" onclick="doCopy(this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             Copy
@@ -1672,7 +1668,7 @@ document.querySelector(<span class="c-str">'esp-flash-button'</span>)
         </button>
       </div>
       <div class="__efb-sm-footer">
-        <a class="__efb-sm-footer-credit" href="https://esp-flash-button.pages.dev" target="_blank" rel="noopener">Built with ESP Flash Button</a>
+        <a class="__efb-sm-footer-credit" href="https://skr-electronics-lab.github.io/esp-flasher-button/" target="_blank" rel="noopener">Built with ESP Flasher Button</a>
         <span class="__efb-sm-count" id="demo-line-count">0 lines</span>
       </div>
     </div>
@@ -1872,17 +1868,17 @@ document.querySelector(<span class="c-str">'esp-flash-button'</span>)
   <div class="footer-meta">
     <div class="footer-links">
       <a class="footer-a" href="https://github.com/espressif/esptool-js" target="_blank">esptool-js</a>
-      <a class="footer-a" href="https://github.com/anomalyco/esp-flash-button" target="_blank">GitHub</a>
-      <a class="footer-a" href="https://skrelectronicslab.com" target="_blank">SKR Lab</a>
+      <a class="footer-a" href="https://github.com/skr-electronics-lab/esp-flasher-button" target="_blank">GitHub</a>
+      <a class="footer-a" href="https://youtube.com/@skr_electronics_lab" target="_blank">SKR Lab</a>
     </div>
-    <div class="footer-note">Powered by <a href="https://esp-flash-button.pages.dev" style="color:#555;text-decoration:none;font-weight:500;" target="_blank">esp-flash-button</a></div>
+    <div class="footer-note">Powered by <a href="https://skr-electronics-lab.github.io/esp-flasher-button/" style="color:#555;text-decoration:none;font-weight:500;" target="_blank">esp-flasher-button</a></div>
   </div>
 </footer>
 
 </div><!-- /wrap -->
 
 <!-- Load component -->
-<script src="esp-flash-button.js"></script>
+<script src="esp-flasher-button.js"></script>
 
 <script>
 /* ── Year ── */
