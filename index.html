@@ -32,6 +32,7 @@
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 
 :root {
+  color-scheme: dark;
   --ink:    #07070a;
   --ink2:   #0c0c10;
   --surf:   #101014;
@@ -55,7 +56,35 @@
   --sans:   'Inter', system-ui, sans-serif;
   --radius: 14px;
 }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; color-scheme: dark; }
+
+/* ── Universal Sleek Dark Scrollbars (Eliminates OS white sliders/arrows) ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2e2e42 #0c0c10;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0c0c10;
+}
+::-webkit-scrollbar-thumb {
+  background: #28283a;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #44445c;
+}
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
 
 body {
   background: var(--ink);
@@ -66,6 +95,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   cursor: default;
+  color-scheme: dark;
 }
 
 /* ────────────────────────────────────────────
@@ -240,14 +270,59 @@ body::after {
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
 .hero-h1 {
-  font-size: clamp(38px,7.5vw,72px); font-weight: 900;
-  letter-spacing: -.04em; line-height: 1.03; max-width: 780px;
+  font-size: clamp(34px,6.5vw,68px); font-weight: 900;
+  letter-spacing: -.04em; line-height: 1.1; max-width: 860px;
   color: var(--text);
 }
 .hero-h1 .accent {
   background: linear-gradient(135deg, var(--red3) 0%, var(--red) 60%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+.hero-shimmer {
+  background: linear-gradient(120deg, #ff4a40 0%, #ff8a7a 25%, #e0302a 50%, #ff6054 75%, #ff4a40 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: heroShimmer 6s linear infinite;
+}
+@keyframes heroShimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+/* Hero word cycle badge animation */
+.hero-cycle-slot {
+  display: inline-block;
+  vertical-align: middle;
+  perspective: 800px;
+  margin: 6px 2px;
+}
+.hero-cycle-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 20px;
+  border-radius: 12px;
+  background: rgba(224,48,42,0.1);
+  border: 1px solid rgba(224,48,42,0.4);
+  box-shadow: 0 0 28px rgba(224,48,42,0.22), inset 0 0 14px rgba(224,48,42,0.08);
+  color: #ff5752;
+  font-size: clamp(28px, 5.5vw, 56px);
+  font-weight: 900;
+  letter-spacing: -.03em;
+  white-space: nowrap;
+  transition: opacity .32s cubic-bezier(.2,.9,.3,1), transform .32s cubic-bezier(.2,.9,.3,1), filter .32s ease;
+}
+.hero-cycle-badge.leaving {
+  opacity: 0;
+  transform: translateY(-16px) scale(0.96);
+  filter: blur(4px);
+}
+.hero-cycle-badge.entering {
+  opacity: 0;
+  transform: translateY(18px) scale(0.96);
+  filter: blur(4px);
 }
 .hero-sub {
   font-size: 17px; color: var(--text2); max-width: 600px; line-height: 1.7; font-weight: 400;
@@ -506,26 +581,38 @@ esp-flash-button:focus-visible { outline: 2px solid var(--red); outline-offset: 
 
 /* Manifest JSON output scroll area */
 .mfg-output-pre {
-  max-height: 260px;
-  overflow-y: auto;
-  /* Firefox */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,.1) transparent;
+  max-height: 280px;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  color-scheme: dark !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(224, 48, 42, 0.45) #0c0c10 !important;
 }
-/* WebKit (Chrome, Edge, Brave) */
 .mfg-output-pre::-webkit-scrollbar {
-  width: 4px;
+  width: 6px !important;
+  height: 6px !important;
+  display: block !important;
 }
 .mfg-output-pre::-webkit-scrollbar-track {
-  background: transparent;
+  background: #0c0c10 !important;
+  border-radius: 4px !important;
 }
 .mfg-output-pre::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,.1);
-  border-radius: 100px;
-  transition: background .2s;
+  background: rgba(224, 48, 42, 0.45) !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(224, 48, 42, 0.2) !important;
 }
 .mfg-output-pre::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,.22);
+  background: var(--red) !important;
+  box-shadow: 0 0 8px rgba(224, 48, 42, 0.6) !important;
+}
+.mfg-output-pre::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.mfg-output-pre::-webkit-scrollbar-corner {
+  background: transparent !important;
 }
 
 .source-mode-toggles { display: flex; align-items: center; gap: 12px; }
@@ -599,6 +686,7 @@ esp-flash-button:focus-visible { outline: 2px solid var(--red); outline-offset: 
 .code-generator-box {
   background: var(--ink); border: 1px solid var(--line2); border-radius: 10px;
   overflow: hidden;
+  isolation: isolate;
 }
 .code-generator-bar {
   display: flex; align-items: center; justify-content: space-between;
@@ -1220,15 +1308,19 @@ td code { font-family: var(--mono); font-size: 11px; background: var(--surf2); p
 <section class="hero">
   <div class="hero-eyebrow">
     <span class="hero-eyebrow-dot"></span>
-    Free &amp; Open Source &nbsp;·&nbsp; v1.0 &nbsp;·&nbsp; Powered by <span style="color:#e03030;font-weight:600;">esp-flash-button</span>
+    Zero Drivers &nbsp;&middot;&nbsp; 100% In-Browser Web Serial &nbsp;&middot;&nbsp; Open Source v1.0
   </div>
 
   <h1 class="hero-h1">
-    Flash ESP32 firmware<br><span class="accent">directly from the browser</span>
+    Embed an ESP firmware flasher on<br>
+    <span class="hero-cycle-slot">
+      <span class="hero-cycle-badge" id="hero-cycle-badge">your website</span>
+    </span><br>
+    <span class="accent hero-shimmer">with just one script tag.</span>
   </h1>
 
   <p class="hero-sub">
-    One script tag. One custom element. Your users flash ESP32, ESP8266, and ESP32-S3 devices in seconds — no boot button, no IDE, no drivers, no server uploads.
+    Turn any blog, website, or documentation page into a 1-click Web Serial flashing station. Your users flash ESP32, ESP8266 &amp; ESP32-S3 boards straight from Chrome &amp; Edge &mdash; zero drivers, zero IDEs, zero boot button hassle.
   </p>
 
   <div class="hero-stats rev">
@@ -3269,6 +3361,35 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
 
   // Initial render
   updateGenerator();
+})();
+
+// ── Hero Word Cycler ──
+(function() {
+  const words = [
+    'your website',
+    'your blog',
+    'your documentation',
+    'your GitHub project',
+    'your hardware store',
+    'your DIY tutorial'
+  ];
+  const el = document.getElementById('hero-cycle-badge');
+  if (!el) return;
+  let idx = 0;
+  setInterval(() => {
+    el.classList.add('leaving');
+    setTimeout(() => {
+      idx = (idx + 1) % words.length;
+      el.textContent = words[idx];
+      el.classList.remove('leaving');
+      el.classList.add('entering');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          el.classList.remove('entering');
+        });
+      });
+    }, 320);
+  }, 2600);
 })();
 
 // ── Subtle copy protection ──
