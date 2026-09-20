@@ -166,6 +166,8 @@
     send:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
     trash:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
     plug:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="M9 7V2"/><path d="M15 7V2"/><path d="M6 13H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><rect x="6" y="12" width="12" height="6" rx="2"/></svg>`,
+    wifi:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>`,
+    github:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>`,
   };
 
   // ── Shadow DOM button CSS (theme system) ───────────────────────
@@ -400,7 +402,7 @@
     }
 
     static get observedAttributes() {
-      return ['manifest', 'label', 'erase-first', 'baud', 'theme', 'size', 'width', 'height', 'radius', 'full-width', 'fullwidth', 'block'];
+      return ['manifest', 'github', 'label', 'erase-first', 'baud', 'theme', 'size', 'width', 'height', 'radius', 'full-width', 'fullwidth', 'block'];
     }
 
     attributeChangedCallback() { if (this.isConnected) this._render(); }
@@ -408,6 +410,17 @@
     disconnectedCallback()    { this._abortFlash = true; this._closeModalNow(); }
 
     get _manifestUrl() { return this.getAttribute('manifest') || ''; }
+    get _githubRepo() {
+      const g = (this.getAttribute('github') || '').trim();
+      if (g) return g.replace(/^https?:\/\/github\.com\//i, '').replace(/\/$/, '');
+      const m = (this.getAttribute('manifest') || '').trim();
+      if (m.startsWith('github:')) return m.replace(/^github:/i, '').trim();
+      if (m.includes('github.com/') && !m.endsWith('.json')) {
+        const parts = m.split('github.com/')[1].split('/');
+        if (parts.length >= 2) return `${parts[0]}/${parts[1]}`;
+      }
+      return '';
+    }
     get _label()       { return this.getAttribute('label') || 'Install Firmware'; }
     get _eraseFirst()  { return this.hasAttribute('erase-first'); }
     get _baud()        { return parseInt(this.getAttribute('baud') || '460800', 10); }
@@ -572,7 +585,7 @@
     }
 
     async _onButtonClick() {
-      if (!this._manifestUrl) { alert('ESP Flash Button: no "manifest" attribute set.'); return; }
+      if (!this._manifestUrl && !this._githubRepo) { alert('ESP Flash Button: no "manifest" or "github" attribute set.'); return; }
       if (this._isFlashing || this._modal) return;
       await this._openModal();
     }
@@ -1878,6 +1891,159 @@
         .__efb-succ-md5-addr { color: var(--efb-succ-md5-addr); flex-shrink: 0; }
         .__efb-succ-md5-hash { color: var(--efb-succ-md5-hash); font-size: 9.5px; margin-left: auto; flex-shrink: 0; }
 
+        /* ── Post-Flash Success Actions ── */
+        .__efb-succ-actions {
+          display: grid;
+          grid-template-columns: 1.15fr 1fr;
+          gap: 8px;
+          margin-top: 4px;
+        }
+        .__efb-succ-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          padding: 9px 12px;
+          border-radius: 9px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          border: none;
+          transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+          font-family: inherit;
+        }
+        .__efb-succ-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+        .__efb-succ-btn-serial {
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.9), rgba(109, 40, 217, 0.95));
+          color: #fff;
+          box-shadow: 0 2px 10px rgba(139, 92, 246, 0.25);
+        }
+        .__efb-succ-btn-serial:hover {
+          background: linear-gradient(135deg, #9061f9, #7c3aed);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+        }
+        .__efb-succ-btn-wifi {
+          background: var(--efb-surface2);
+          border: 1px solid var(--efb-border2);
+          color: var(--efb-text);
+        }
+        .__efb-succ-btn-wifi:hover {
+          border-color: var(--efb-accent);
+          color: var(--efb-accent);
+          transform: translateY(-1px);
+        }
+
+        /* ── Improv Wi-Fi Provisioning Card ── */
+        .__efb-wifi-card {
+          background: var(--efb-surface);
+          border: 1px solid var(--efb-border4);
+          border-radius: 12px;
+          padding: 14px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .__efb-wifi-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .__efb-wifi-icon {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: rgba(34, 211, 238, 0.12);
+          border: 1px solid rgba(34, 211, 238, 0.3);
+          color: #22d3ee;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .__efb-wifi-icon svg { width: 17px; height: 17px; }
+        .__efb-wifi-title { font-size: 13px; font-weight: 700; color: var(--efb-text); }
+        .__efb-wifi-sub { font-size: 11px; color: var(--efb-text2); margin-top: 1px; }
+        .__efb-wifi-form { display: flex; flex-direction: column; gap: 10px; }
+        .__efb-wifi-field { display: flex; flex-direction: column; gap: 4px; }
+        .__efb-wifi-label { font-size: 11px; font-weight: 600; color: var(--efb-text2); }
+        .__efb-wifi-input {
+          background: var(--efb-surface2);
+          border: 1px solid var(--efb-border2);
+          border-radius: 7px;
+          padding: 7px 11px;
+          color: var(--efb-text);
+          font-family: inherit;
+          font-size: 12px;
+          outline: none;
+          transition: border-color 0.15s;
+        }
+        .__efb-wifi-input:focus { border-color: var(--efb-accent); }
+        .__efb-wifi-status {
+          font-size: 11.5px;
+          padding: 7px 11px;
+          border-radius: 7px;
+          line-height: 1.4;
+        }
+        .__efb-wifi-status.info {
+          background: rgba(59, 130, 246, 0.1);
+          border: 1px solid rgba(59, 130, 246, 0.25);
+          color: #60a5fa;
+        }
+        .__efb-wifi-status.ok {
+          background: var(--efb-green-bg);
+          border: 1px solid var(--efb-green-border);
+          color: var(--efb-green);
+        }
+        .__efb-wifi-status.err {
+          background: var(--efb-error-bg);
+          border: 1px solid var(--efb-error-border);
+          color: var(--efb-error);
+        }
+        .__efb-wifi-btns {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 8px;
+          margin-top: 4px;
+        }
+
+        /* ── Smart Baud Fallback Box ── */
+        .__efb-baud-fallback-box {
+          background: rgba(245, 158, 11, 0.08);
+          border: 1px solid rgba(245, 158, 11, 0.3);
+          border-radius: 12px;
+          padding: 13px 15px;
+        }
+        .__efb-baud-fallback-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: #fbbf24;
+          display: flex;
+          align-items: center;
+          gap: 7px;
+        }
+        .__efb-baud-fallback-title svg { width: 15px; height: 15px; }
+        .__efb-baud-fallback-desc {
+          font-size: 11.5px;
+          color: var(--efb-text2);
+          margin-top: 6px;
+          line-height: 1.45;
+        }
+
+        /* ── GitHub release badge ── */
+        .__efb-ghbadge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          color: var(--efb-text);
+          font-size: 10.5px;
+          text-decoration: none;
+        }
+        .__efb-ghbadge svg { width: 12px; height: 12px; }
+
         /* ── Confetti celebration ── */
         .__efb-confetti-container {
           position: fixed;
@@ -1959,6 +2125,7 @@
           .__efb-details-content { grid-template-columns: 1fr 1fr; }
           .__efb-confirm-baudrow { flex-direction: column; align-items: stretch; gap: 8px; }
           .__efb-confirm-baud-select { width: 100%; }
+          .__efb-succ-actions { grid-template-columns: 1fr; }
           .__efb-footer {
             padding: 10px 14px;
             flex-direction: column-reverse;
@@ -2191,6 +2358,32 @@
 
     // ── Load manifest ────────────────────────────────────────────
     async _loadManifest() {
+      // Direct GitHub repository integration
+      if (this._githubRepo) {
+        this._setTitle('GitHub Release…', `Fetching latest release from ${this._githubRepo}`);
+        this._setBody(`
+          <div class="__efb-srow">
+            <div class="__efb-sdot amber"></div>
+            <div class="__efb-stext">Querying GitHub Releases for <strong>${this._esc(this._githubRepo)}</strong>…</div>
+          </div>
+        `);
+        this._setFooterBtns('');
+
+        try {
+          this._manifest = await this._resolveGitHubRelease(this._githubRepo);
+          this._validateManifest();
+          this._showReadyPanel();
+          return;
+        } catch (e) {
+          this._showError('GitHub Release Resolution Failed', e.message, [
+            `Make sure https://github.com/${this._githubRepo} has at least one published Release.`,
+            'Ensure release assets include .bin firmware files or a manifest.json.',
+            'Check GitHub API rate limits if requesting frequently.',
+          ]);
+          return;
+        }
+      }
+
       this._setTitle('Loading…', 'Fetching firmware manifest');
       this._setBody(`
         <div class="__efb-srow">
@@ -2213,6 +2406,136 @@
           'Ensure the manifest JSON is valid.',
         ]);
       }
+    }
+
+    async _resolveGitHubRelease(repo) {
+      const url = `https://api.github.com/repos/${repo}/releases/latest`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
+      if (!res.ok) {
+        if (res.status === 404) throw new Error(`No releases found for ${repo}. Check repository name or publish a release.`);
+        if (res.status === 403) throw new Error('GitHub API rate limit reached. Please try again later.');
+        throw new Error(`GitHub API error HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      const assets = data.assets || [];
+
+      // 1. If release contains a manifest.json asset, download and use that
+      const manifestAsset = assets.find(a => a.name.toLowerCase() === 'manifest.json');
+      if (manifestAsset) {
+        const mRes = await fetch(manifestAsset.browser_download_url);
+        if (!mRes.ok) throw new Error(`Failed to download manifest.json from release (HTTP ${mRes.status})`);
+        const parsed = await mRes.json();
+        if (!parsed.version && data.tag_name) parsed.version = data.tag_name;
+        if (!parsed.githubRelease) parsed.githubRelease = { repo, tag: data.tag_name, url: data.html_url };
+        return parsed;
+      }
+
+      // 2. Otherwise, synthesize manifest from .bin assets in the release
+      const binAssets = assets.filter(a => a.name.toLowerCase().endsWith('.bin'));
+      if (!binAssets.length) {
+        throw new Error(`Latest release ${data.tag_name || ''} has no .bin assets or manifest.json attached.`);
+      }
+
+      const isFactory = (name) => /factory|merged|combined|all/i.test(name);
+      const isBootloader = (name) => /bootloader/i.test(name);
+      const isPartitions = (name) => /partition/i.test(name);
+      const isFs = (name) => /littlefs|spiffs|fatfs|storage/i.test(name);
+      const isOta = (name) => /ota/i.test(name);
+
+      const CHIP_PATTERNS = [
+        { chip: 'esp32s3', label: 'ESP32-S3', regex: /esp32[-_]?s3/i },
+        { chip: 'esp32c3', label: 'ESP32-C3', regex: /esp32[-_]?c3/i },
+        { chip: 'esp32s2', label: 'ESP32-S2', regex: /esp32[-_]?s2/i },
+        { chip: 'esp32c6', label: 'ESP32-C6', regex: /esp32[-_]?c6/i },
+        { chip: 'esp32',   label: 'ESP32',    regex: /esp32(?![-_]?[sc])/i },
+        { chip: 'esp8266', label: 'ESP8266',  regex: /esp8266/i },
+        { chip: 'esp8285', label: 'ESP8285',  regex: /esp8285/i },
+      ];
+
+      const builds = [];
+      for (const cp of CHIP_PATTERNS) {
+        const chipBins = binAssets.filter(a => cp.regex.test(a.name));
+        if (chipBins.length > 0) {
+          const factory = chipBins.find(a => isFactory(a.name));
+          if (factory) {
+            builds.push({
+              chip: cp.chip,
+              name: `${data.name || repo.split('/')[1]} (${cp.label})`,
+              parts: [{ path: factory.browser_download_url, offset: 0x0 }]
+            });
+          } else {
+            const boot = chipBins.find(a => isBootloader(a.name));
+            const part = chipBins.find(a => isPartitions(a.name));
+            const fs = chipBins.find(a => isFs(a.name));
+            const app = chipBins.find(a => !isBootloader(a.name) && !isPartitions(a.name) && !isFs(a.name) && !isOta(a.name));
+
+            const parts = [];
+            const isC3orS3 = cp.chip === 'esp32c3' || cp.chip === 'esp32s3' || cp.chip === 'esp32c6';
+            if (boot) parts.push({ path: boot.browser_download_url, offset: isC3orS3 ? 0x0 : 0x1000 });
+            if (part) parts.push({ path: part.browser_download_url, offset: 0x8000 });
+            if (app) parts.push({ path: app.browser_download_url, offset: 0x10000 });
+            if (fs) parts.push({ path: fs.browser_download_url, offset: 0x290000 });
+
+            if (parts.length > 0) {
+              builds.push({
+                chip: cp.chip,
+                name: `${data.name || repo.split('/')[1]} (${cp.label})`,
+                parts
+              });
+            } else if (chipBins.length === 1) {
+              const single = chipBins[0];
+              const offset = cp.chip.includes('8266') || cp.chip.includes('8285') ? 0x0 : 0x10000;
+              builds.push({
+                chip: cp.chip,
+                name: `${data.name || repo.split('/')[1]} (${cp.label})`,
+                parts: [{ path: single.browser_download_url, offset }]
+              });
+            }
+          }
+        }
+      }
+
+      if (builds.length === 0) {
+        const factory = binAssets.find(a => isFactory(a.name));
+        if (factory) {
+          builds.push({
+            chip: 'esp32',
+            name: `${data.name || repo.split('/')[1]} (ESP32)`,
+            parts: [{ path: factory.browser_download_url, offset: 0x0 }]
+          });
+        } else {
+          const boot = binAssets.find(a => isBootloader(a.name));
+          const part = binAssets.find(a => isPartitions(a.name));
+          const fs = binAssets.find(a => isFs(a.name));
+          const app = binAssets.find(a => !isBootloader(a.name) && !isPartitions(a.name) && !isFs(a.name));
+
+          if (boot || part || app) {
+            const parts = [];
+            if (boot) parts.push({ path: boot.browser_download_url, offset: 0x1000 });
+            if (part) parts.push({ path: part.browser_download_url, offset: 0x8000 });
+            if (app) parts.push({ path: app.browser_download_url, offset: 0x10000 });
+            if (fs) parts.push({ path: fs.browser_download_url, offset: 0x290000 });
+            builds.push({ chip: 'esp32', name: data.name || repo.split('/')[1], parts });
+          } else {
+            binAssets.forEach(bin => {
+              builds.push({
+                chip: 'esp32',
+                name: bin.name.replace(/\.bin$/i, ''),
+                parts: [{ path: bin.browser_download_url, offset: 0x0 }]
+              });
+            });
+          }
+        }
+      }
+
+      return {
+        name: data.name || repo.split('/')[1] || 'Firmware',
+        version: data.tag_name || 'latest',
+        description: data.body ? (data.body.length > 200 ? data.body.substring(0, 200) + '…' : data.body) : `Latest release from ${repo}`,
+        githubRelease: { repo, tag: data.tag_name, url: data.html_url },
+        flashSettings: { mode: 'keep', freq: 'keep', baud: 460800, compress: true },
+        builds
+      };
     }
 
     _validateManifest() {
@@ -2307,7 +2630,11 @@
               <div class="__efb-fwname">${this._esc(name)}</div>
               <div class="__efb-fwmeta">${this._esc(description || 'Firmware installation')}</div>
             </div>
-            ${ver ? `<span class="__efb-fwbadge">${this._esc(ver)}</span>` : ''}
+            ${this._manifest?.githubRelease ? `
+              <a class="__efb-fwbadge __efb-ghbadge" href="${this._esc(this._manifest.githubRelease.url)}" target="_blank" rel="noopener" title="View release on GitHub">
+                ${ICONS.github} ${this._esc(this._manifest.githubRelease.tag || 'Release')}
+              </a>
+            ` : (ver ? `<span class="__efb-fwbadge">${this._esc(ver)}</span>` : '')}
           </div>
         </div>
       `;
@@ -2938,12 +3265,55 @@
         await transport.disconnect().catch(() => {});
         this._transport = null;
         this._log('error', '✗ ' + e.message);
+
+        // Smart Baud Fallback: Offer 1-click retry at 115200 if high-speed flash timed out
+        const isBaudTimeout = /time(d)?\s*out|slip|sync|header|packet|receive/i.test(e.message);
+        if (desiredBaud > 115200 && isBaudTimeout) {
+          this._showBaudRecovery(desiredBaud, e.message, build);
+          return;
+        }
+
         this._showError('Flash failed', e.message, [
           'Make sure your device stays connected throughout flashing.',
           'Try a different USB cable or port.',
           'Hold the BOOT button if the device keeps failing.',
         ]);
       }
+    }
+
+    _showBaudRecovery(failedBaud, errorMsg, build) {
+      this._setTitle('Flash Speed Fallback', 'Connection lost during flashing');
+      this._setStatusDot('amber', `<strong>High-speed flash timed out (${failedBaud} baud).</strong>`);
+
+      const errbox = this._modal?.querySelector('#__efb-errbox');
+      if (errbox) {
+        errbox.style.display = 'block';
+        errbox.innerHTML = `
+          <div class="__efb-baud-fallback-box">
+            <div class="__efb-baud-fallback-title">
+              ${ICONS.warning} Flashing timed out at ${failedBaud} baud
+            </div>
+            <div class="__efb-baud-fallback-desc">
+              High speeds (${failedBaud} baud) frequently drop packets on unshielded USB cables, breadboards, or USB hubs. Falling back to the universal <strong>115200 safe baud rate</strong> almost always succeeds.
+            </div>
+            <button class="__efb-btn primary" id="__efb-btn-retry-safe" style="width:100%;margin-top:10px;justify-content:center;">
+              ${ICONS.bolt} Retry at Safe Speed (115200 Baud)
+            </button>
+          </div>
+        `;
+        errbox.querySelector('#__efb-btn-retry-safe')?.addEventListener('click', async () => {
+          errbox.style.display = 'none';
+          this._userBaud = 115200;
+          this._flashSettings.baud = 115200;
+          this._log('info', '→ Retrying flash at safe speed: 115200 baud...');
+          await this._executeFlash(build);
+        });
+      }
+
+      this._setFooterBtns(`
+        <button class="__efb-btn ghost" id="__efb-btn-cancel-rec">Cancel</button>
+      `);
+      this._footerBtns?.querySelector('#__efb-btn-cancel-rec')?.addEventListener('click', () => this._closeModal());
     }
 
     async _reconnectForFlash(baud = this._detectBaud || this._baud) {
@@ -3040,14 +3410,31 @@
               `).join('')}
             </div>
             ` : ''}
+            <div class="__efb-succ-actions">
+              <button class="__efb-succ-btn __efb-succ-btn-serial" id="__efb-succ-open-monitor" title="View boot logs in Serial Monitor">
+                ${ICONS.terminal} <span>Open Serial Monitor</span>
+              </button>
+              <button class="__efb-succ-btn __efb-succ-btn-wifi" id="__efb-succ-open-wifi" title="Set up Wi-Fi over USB Serial">
+                ${ICONS.wifi} <span>Configure Wi-Fi</span>
+              </button>
+            </div>
           </div>
         `;
+
+        successEl.querySelector('#__efb-succ-open-monitor')?.addEventListener('click', async () => {
+          await this._closeModal();
+          await this._openSerialMonitor(115200);
+        });
+
+        successEl.querySelector('#__efb-succ-open-wifi')?.addEventListener('click', () => {
+          this._showWifiProvisioning();
+        });
       }
 
       const hasPort = !!this._port;
 
       this._setFooterBtns(`
-        <button class="__efb-btn ghost" id="__efb-btn-done">Close</button>
+        <button class="__efb-btn ghost" id="__efb-btn-done">Done</button>
         ${hasPort ? `<button class="__efb-btn ghost serial-btn" id="__efb-btn-serial" style="gap:5px;">${ICONS.terminal} Monitor</button>` : ''}
         <button class="__efb-btn ghost" id="__efb-btn-refresh" style="gap:5px;padding:9px 12px;" title="Start over">${ICONS.refresh}</button>
       `);
@@ -3059,6 +3446,107 @@
       });
       if (hasPort) {
         this._footerBtns?.querySelector('#__efb-btn-serial')?.addEventListener('click', () => this._openSerialMonitor());
+      }
+    }
+
+    _showWifiProvisioning() {
+      const successEl = this._modal?.querySelector('#__efb-success');
+      if (!successEl) return;
+      this._setTitle('Wi-Fi Setup', 'Connect device to local Wi-Fi');
+      this._setStatusDot('amber', 'Enter Wi-Fi credentials to provision device over Serial');
+
+      successEl.innerHTML = `
+        <div class="__efb-wifi-card">
+          <div class="__efb-wifi-header">
+            <div class="__efb-wifi-icon">${ICONS.wifi}</div>
+            <div>
+              <div class="__efb-wifi-title">Improv Wi-Fi Provisioning</div>
+              <div class="__efb-wifi-sub">Send Wi-Fi credentials directly over USB serial</div>
+            </div>
+          </div>
+          <div class="__efb-wifi-form">
+            <div class="__efb-wifi-field">
+              <label class="__efb-wifi-label">Wi-Fi Network Name (SSID)</label>
+              <input type="text" class="__efb-wifi-input" id="__efb-wifi-ssid" placeholder="e.g. MyHomeNetwork" autocomplete="off" />
+            </div>
+            <div class="__efb-wifi-field">
+              <label class="__efb-wifi-label">Password</label>
+              <input type="password" class="__efb-wifi-input" id="__efb-wifi-pass" placeholder="Wi-Fi Password" autocomplete="off" />
+            </div>
+            <div class="__efb-wifi-status" id="__efb-wifi-status" style="display:none;"></div>
+            <div class="__efb-wifi-btns">
+              <button class="__efb-btn ghost" id="__efb-wifi-back">Back</button>
+              <button class="__efb-btn primary" id="__efb-wifi-send">${ICONS.wifi} Connect Device</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      successEl.querySelector('#__efb-wifi-back')?.addEventListener('click', () => {
+        const chip = this._chipDetected || '—';
+        this._showSuccess(chip, this._flashSizeDetected || '4MB', this._flashDuration || '0', 1, []);
+      });
+
+      successEl.querySelector('#__efb-wifi-send')?.addEventListener('click', async () => {
+        const ssid = successEl.querySelector('#__efb-wifi-ssid')?.value.trim();
+        const pass = successEl.querySelector('#__efb-wifi-pass')?.value || '';
+        const statusEl = successEl.querySelector('#__efb-wifi-status');
+        const sendBtn = successEl.querySelector('#__efb-wifi-send');
+        if (!ssid) {
+          if (statusEl) {
+            statusEl.style.display = 'block';
+            statusEl.className = '__efb-wifi-status err';
+            statusEl.textContent = 'Please enter a Wi-Fi network name (SSID).';
+          }
+          return;
+        }
+        if (sendBtn) sendBtn.disabled = true;
+        if (statusEl) {
+          statusEl.style.display = 'block';
+          statusEl.className = '__efb-wifi-status info';
+          statusEl.textContent = 'Sending Wi-Fi credentials via Serial…';
+        }
+        await this._sendImprovWifi(ssid, pass, statusEl, sendBtn);
+      });
+    }
+
+    async _sendImprovWifi(ssid, pass, statusEl, sendBtn) {
+      try {
+        if (!this._port) throw new Error('Device not connected. Reconnect USB cable.');
+        if (!this._port.readable || !this._port.writable) {
+          await this._port.open({ baudRate: 115200 }).catch(() => {});
+        }
+
+        const encoder = new TextEncoder();
+        const ssidBytes = encoder.encode(ssid);
+        const passBytes = encoder.encode(pass);
+
+        // Improv RPC Packet (Command 0x01: Send Wi-Fi settings)
+        // Format: 'IMPROV', version(0x01), type(0x03), length, [cmd(0x01), ssid_len, ...ssid, pass_len, ...pass], checksum
+        const header = [0x49, 0x4D, 0x50, 0x52, 0x4F, 0x56, 0x01, 0x03];
+        const payload = [0x01, ssidBytes.length, ...ssidBytes, passBytes.length, ...passBytes];
+        const packet = [...header, payload.length, ...payload];
+        let sum = 0;
+        for (const b of packet) sum = (sum + b) & 0xff;
+        packet.push(sum);
+
+        const writer = this._port.writable.getWriter();
+        await writer.write(new Uint8Array(packet));
+        writer.releaseLock();
+
+        if (statusEl) {
+          statusEl.className = '__efb-wifi-status ok';
+          statusEl.innerHTML = `✓ Wi-Fi credentials sent! <br><small>If your firmware supports Improv-Wi-Fi, it is connecting now.</small>`;
+        }
+        this._log('success', `✓ Improv Wi-Fi: sent credentials for network "${ssid}"`);
+      } catch (err) {
+        if (statusEl) {
+          statusEl.className = '__efb-wifi-status err';
+          statusEl.textContent = 'Failed to send credentials: ' + err.message;
+        }
+        this._log('error', `✗ Improv Wi-Fi error: ${err.message}`);
+      } finally {
+        if (sendBtn) sendBtn.disabled = false;
       }
     }
 

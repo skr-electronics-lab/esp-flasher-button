@@ -18,7 +18,8 @@ You are helping a user integrate, deploy, or troubleshoot **ESP Flash Button** â
 ## Attributes
 | Attribute | Default | Description |
 |-----------|---------|-------------|
-| `manifest` | (required) | URL to firmware manifest JSON |
+| `manifest` | â€” | URL to firmware manifest JSON (required unless `github` is specified) |
+| `github` | â€” | GitHub repository (e.g. `"owner/repo"`). Automatically resolves the latest release, downloads `manifest.json` or synthesizes build entries from attached `.bin` files |
 | `label` | "Install Firmware" | Button text |
 | `size` | "14.5" | Button font size & overall scale: any number (e.g. `12`, `14`, `16`, `18`, `20`, `22`, `24`, `28`, `32`) or presets (`sm`, `md`, `lg`, `xl`) |
 | `width` | auto | Explicit button width (e.g. `"240px"`, `"100%"`, `"320"`) |
@@ -27,6 +28,11 @@ You are helping a user integrate, deploy, or troubleshoot **ESP Flash Button** â
 | `full-width` / `block` | off | Stretches button across 100% of parent width |
 | `erase-first` | off | Erase all flash before writing |
 | `baud` | 460800 | Flash baud rate |
+
+## Advanced Features
+- **GitHub Releases Auto-Resolution**: Use `<esp-flash-button github="owner/repo">` to automatically query GitHub API, fetch the latest tag/release, and flash binaries without hosting a manual `manifest.json`.
+- **Post-Flash Quick Actions**: 1-click **Open Serial Monitor** (opens Web Serial at 115200 to view boot logs) and **Configure Wi-Fi** (Improv-Wi-Fi protocol over serial).
+- **Smart Baud Auto-Recovery**: If flashing at high speeds (921600 or 460800 baud) fails due to unshielded cables or noise, the flasher provides a 1-click retry button at the safe 115200 speed.
 
 ## Theme reference
 - **red**: Bold filled pill shape, red gradient
