@@ -302,7 +302,7 @@ esp-flash-button:focus-visible { outline: 2px solid var(--red); outline-offset: 
    DEMO BLOCK
 ──────────────────────────────────────────── */
 .demo-wrap {
-  max-width: 680px; margin: 0 auto; width: 100%;
+  max-width: 100%; margin: 0 auto; width: 100%;
 }
 .demo-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -385,7 +385,47 @@ esp-flash-button:focus-visible { outline: 2px solid var(--red); outline-offset: 
 .customizer-control-grp { display: flex; flex-direction: column; gap: 7px; }
 
 .customizer-slider {
-  width: 100%; accent-color: var(--red); cursor: pointer; height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 100px;
+  background: linear-gradient(to right, var(--red) 0%, var(--red) var(--slider-pct, 41.18%), var(--line2) var(--slider-pct, 41.18%), var(--line2) 100%);
+  cursor: pointer;
+  outline: none;
+  border: none;
+  transition: background .1s;
+}
+.customizer-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--red);
+  cursor: pointer;
+  box-shadow: 0 0 0 3px rgba(224,48,42,.18), 0 2px 8px rgba(0,0,0,.5);
+  transition: box-shadow .15s, transform .15s;
+}
+.customizer-slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 5px rgba(224,48,42,.28), 0 2px 8px rgba(0,0,0,.5);
+  transform: scale(1.1);
+}
+.customizer-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--red);
+  cursor: pointer;
+  box-shadow: 0 0 0 3px rgba(224,48,42,.18);
+  transition: box-shadow .15s, transform .15s;
+}
+.customizer-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 100px;
+  background: var(--line2);
 }
 .customizer-select, .customizer-input {
   background: var(--surf2); border: 1px solid var(--line2); border-radius: 8px;
@@ -578,7 +618,7 @@ code.inline {
 /* ────────────────────────────────────────────
    SERIAL MONITOR DEMO
 ──────────────────────────────────────────── */
-.sm-demo-outer { max-width: 700px; margin: 0 auto; }
+.sm-demo-outer { max-width: 100%; margin: 0 auto; }
 .sm-demo-label {
   display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
   font-size: 11px; font-family: var(--mono); color: var(--text3);
@@ -681,7 +721,9 @@ code.inline {
 }
 .ai-header {
   display:flex; align-items:center; gap:10px; margin-bottom:14px;
+  justify-content:space-between;
 }
+.ai-header-left { display:flex; align-items:center; gap:10px; }
 .ai-header svg { width:18px; height:18px; color:var(--amber); }
 .ai-title { font-size:13px; font-weight:600; color:var(--text); }
 .ai-desc { font-size:12px; color:var(--text2); line-height:1.6; margin-bottom:14px; }
@@ -693,14 +735,14 @@ code.inline {
 }
 .ai-prompt-box::-webkit-scrollbar { width:3px; }
 .ai-prompt-box::-webkit-scrollbar-thumb { background:var(--line2); border-radius:2px; }
-.ai-copy-row { display:flex; gap:10px; align-items:center; }
+.ai-copy-row { display:none; }
 .ai-copy-btn {
   display:inline-flex; align-items:center; gap:6px;
-  padding:8px 16px; border-radius:7px; border:1px solid var(--line2);
-  background:var(--surf); color:var(--text3); font-size:12px; font-weight:600;
-  cursor:pointer; font-family:var(--sans); transition:all .15s;
+  padding:7px 14px; border-radius:7px; border:1px solid var(--line2);
+  background:var(--surf); color:var(--text2); font-size:11.5px; font-weight:600;
+  cursor:pointer; font-family:var(--sans); transition:all .15s; flex-shrink:0;
 }
-.ai-copy-btn:hover { background:var(--surf3); color:var(--text2); border-color:var(--line2); }
+.ai-copy-btn:hover { background:var(--surf3); color:var(--text); border-color:var(--red); }
 .ai-copy-btn svg { width:13px; height:13px; }
 .ai-copy-btn.copied { background:rgba(61,214,140,.1); border-color:rgba(61,214,140,.3); color:var(--green); }
 .ai-copy-note { font-size:11px; color:var(--text4); }
@@ -1195,8 +1237,14 @@ td code { font-family: var(--mono); font-size: 11px; background: var(--surf2); p
     </div>
     <div class="ai-section">
       <div class="ai-header">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 0-4 4v1H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4zm-2 4a2 2 0 1 1 4 0v1h-4V6zm-2 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1z"/></svg>
-        <div class="ai-title">ESP Flash Button — Complete Project Specification</div>
+        <div class="ai-header-left">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 0-4 4v1H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4zm-2 4a2 2 0 1 1 4 0v1h-4V6zm-2 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1z"/></svg>
+          <div class="ai-title">ESP Flash Button — Complete Project Specification</div>
+        </div>
+        <button class="ai-copy-btn" id="ai-copy-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Prompt
+        </button>
       </div>
       <div class="ai-desc">
         This prompt contains the full technical specification. Paste into any AI before asking coding or troubleshooting questions.
@@ -1348,13 +1396,7 @@ LANDING PAGE: index.html at project root. Contains hero, demo (live component + 
 MODAL THEME: When button theme="light" is used, the modal and serial monitor render with a light theme (white backgrounds, blue accent #3b82f6, slate text). All other button themes (red/dark/green/ghost/minimal) use the dark modal theme (dark backgrounds, red accent #e03030). The modal theme switch is controlled by data-theme="light" on the overlay element, which triggers CSS variable overrides in the :root[data-theme="light"] section.
 
 DEMO SECTION: Landing page demo shows both modal themes side by side — "Dark Theme" (theme="red" button) and "Light Theme" (theme="light" button). Users can click either to see the flasher modal in dark or light mode.</div>
-      <div class="ai-copy-row">
-        <button class="ai-copy-btn" id="ai-copy-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          Copy prompt
-        </button>
-        <span class="ai-copy-note" id="ai-copy-msg">Click to copy the full project specification</span>
-      </div>
+      <div class="ai-copy-row" style="display:none;"></div>
     </div>
   </div>
 </section>
@@ -1789,7 +1831,7 @@ document.querySelector(<span class="c-str">'esp-flash-button'</span>)
           </div>
         </div>
         <button class="real-sm-connect-btn" id="real-connect-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="9" rx="2"/><path d="M9 2v3M15 2v3"/><path d="M5 11v2a7 7 0 0 0 14 0v-2"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="9" y1="22" x2="15" y2="22"/></svg>
           <span id="real-connect-btn-txt">Connect Device</span>
         </button>
       </div>
@@ -2608,18 +2650,14 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
   const text = document.getElementById('ai-prompt-text').textContent;
   navigator.clipboard.writeText(text).then(() => {
     const btn = this;
-    const msg = document.getElementById('ai-copy-msg');
     btn.classList.add('copied');
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Copied!';
-    if (msg) msg.textContent = 'Prompt copied — paste it to any AI assistant';
     setTimeout(() => {
       btn.classList.remove('copied');
-      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy prompt';
-      if (msg) msg.textContent = 'Click to copy the full project context';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Prompt';
     }, 3000);
   }).catch(() => {
-    const msg = document.getElementById('ai-copy-msg');
-    if (msg) msg.textContent = 'Failed to copy — select the text manually';
+    this.textContent = 'Failed';
   });
 });
 
@@ -2755,7 +2793,16 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
     }
   }
 
-  slider.addEventListener('input', updateGenerator);
+  function updateSliderFill() {
+    const min = parseFloat(slider.min) || 11;
+    const max = parseFloat(slider.max) || 28;
+    const val = parseFloat(slider.value) || 18;
+    const pct = ((val - min) / (max - min) * 100).toFixed(2) + '%';
+    slider.style.setProperty('--slider-pct', pct);
+  }
+
+  slider.addEventListener('input', () => { updateSliderFill(); updateGenerator(); });
+  updateSliderFill();
   if (radiusSelect) radiusSelect.addEventListener('change', updateGenerator);
   if (labelInput) labelInput.addEventListener('input', updateGenerator);
   if (sourceInput) sourceInput.addEventListener('input', updateGenerator);
