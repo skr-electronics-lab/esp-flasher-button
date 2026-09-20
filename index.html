@@ -504,6 +504,30 @@ esp-flash-button:focus-visible { outline: 2px solid var(--red); outline-offset: 
 .mfg-add-btn:hover { border-color: var(--red); color: var(--text); }
 .mfg-add-btn svg { width: 12px; height: 12px; }
 
+/* Manifest JSON output scroll area */
+.mfg-output-pre {
+  max-height: 260px;
+  overflow-y: auto;
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.1) transparent;
+}
+/* WebKit (Chrome, Edge, Brave) */
+.mfg-output-pre::-webkit-scrollbar {
+  width: 4px;
+}
+.mfg-output-pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mfg-output-pre::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.1);
+  border-radius: 100px;
+  transition: background .2s;
+}
+.mfg-output-pre::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,.22);
+}
+
 .source-mode-toggles { display: flex; align-items: center; gap: 12px; }
 
 /* ── Custom Checkbox & Radio ── */
@@ -1482,7 +1506,7 @@ td code { font-family: var(--mono); font-size: 11px; background: var(--surf2); p
                   </button>
                 </div>
               </div>
-              <pre class="code-generator-pre" style="max-height:280px;overflow-y:auto;"><code id="mfg-output"></code></pre>
+              <pre class="code-generator-pre mfg-output-pre"><code id="mfg-output"></code></pre>
             </div>
 
           </div>
