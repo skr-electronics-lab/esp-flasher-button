@@ -181,6 +181,24 @@ body::after {
 .brand-logo svg { width: 18px; height: 18px; color: var(--red); position: relative; }
 .brand-name { font-size: 14px; font-weight: 800; color: var(--text); letter-spacing: -.02em; }
 .brand-tag { font-size: 10px; color: var(--text3); font-family: var(--mono); letter-spacing: .04em; margin-top: 1px; }
+
+/* Shining brand shimmer effect */
+.brand-shimmer {
+  background: linear-gradient(90deg, #ff4a40 0%, #ffffff 28%, #ff4a40 55%, #ffa726 78%, #ff4a40 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: skrBrandShine 3.2s linear infinite;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  display: inline-block;
+  filter: drop-shadow(0 0 7px rgba(255, 74, 64, 0.4));
+}
+@keyframes skrBrandShine {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
 .nav { display: flex; gap: 6px; align-items: center; }
 .nav-a {
   font-size: 12.5px; color: var(--text3); text-decoration: none;
@@ -190,20 +208,13 @@ body::after {
 }
 .nav-a:hover { color: var(--text2); background: var(--surf2); }
 .nav-a:focus-visible { outline: 2px solid var(--red); outline-offset: 4px; border-radius: 4px; }
-.nav-cta {
-  font-size: 12.5px; font-weight: 600; color: var(--text);
-  padding: 7px 16px; border-radius: 9px;
-  background: var(--surf3); border: 1px solid var(--line2);
-  text-decoration: none; transition: all .15s;
-}
-.nav-cta:hover { border-color: var(--red); color: var(--red); }
 .nav-gh {
   display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600;
   color: var(--text2); padding: 7px 14px; border-radius: 9px;
   background: var(--surf2); border: 1px solid var(--line);
   text-decoration: none; transition: all .15s;
 }
-.nav-gh:hover { color: var(--text); border-color: var(--line2); }
+.nav-gh:hover { color: var(--text); border-color: var(--line2); background: var(--surf3); }
 .nav-gh svg { width: 14px; height: 14px; }
 
 
@@ -327,40 +338,105 @@ esp-flash-button:focus-visible { outline: 2px solid var(--red); outline-offset: 
   width: 5px; height: 5px; border-radius: 50%; background: var(--green);
   box-shadow: 0 0 5px var(--green); animation: blink 2.2s ease-in-out infinite;
 }
-.demo-btn-row { display: flex; justify-content: center; margin-bottom:24px; }
-.demo-btn-row esp-flash-button {
-  transform:scale(1.05);
+/* ── Interactive Customizer & Playground Styles ── */
+.customizer-card {
+  background: var(--surf); border: 1px solid var(--line2);
+  border-radius: 14px; padding: 22px 24px;
+  display: flex; flex-direction: column; gap: 18px;
 }
-.demo-themes-section {
-  border-top:1px solid var(--line); padding-top:20px;
+.customizer-head {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
 }
-.demo-themes-label {
-  font-size: 10px; color: var(--text4); font-family: var(--mono); letter-spacing: .08em;
-  text-transform: uppercase; font-weight: 600; margin-bottom: 16px;
+.customizer-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.customizer-subtitle { font-size: 11.5px; color: var(--text3); margin-top: 2px; }
+.customizer-badge {
+  font-family: var(--mono); font-size: 11.5px; color: var(--red);
+  font-weight: 700; background: var(--surf2); border: 1px solid var(--line2);
+  padding: 4px 10px; border-radius: 6px;
 }
-.demo-theme-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+.customizer-row { display: flex; flex-direction: column; gap: 8px; }
+.customizer-label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text3); font-family: var(--mono);
 }
-.demo-theme-card {
-  background: var(--surf2); border: 1px solid var(--line);
-  border-radius: 10px; padding: 14px; text-align: center;
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-  transition: border-color .2s;
+.customizer-label-row {
+  display: flex; align-items: center; justify-content: space-between;
 }
-.demo-theme-card:hover { border-color: var(--line2); }
-.demo-modal-row {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom:20px;
+.customizer-val { font-size: 11px; font-family: var(--mono); color: var(--text2); font-weight: 600; }
+
+.theme-pills { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.theme-pill {
+  padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: 8px;
+  background: var(--surf2); border: 1px solid var(--line); color: var(--text3);
+  cursor: pointer; transition: all .15s; font-family: var(--sans);
 }
-.demo-modal-card {
-  background: var(--surf2); border: 1px solid var(--line);
-  border-radius: 10px; padding: 16px; text-align: center;
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-  transition: border-color .2s;
+.theme-pill:hover { color: var(--text2); border-color: var(--line2); }
+.theme-pill.active {
+  background: var(--surf3); border-color: var(--red); color: var(--text);
+  box-shadow: 0 0 10px rgba(224,48,42,0.18);
 }
-.demo-modal-card:hover { border-color: var(--line2); }
-.demo-theme-name {
-  font-size: 10px; font-family: var(--mono); color: var(--text4);
-  text-transform: uppercase; letter-spacing: .1em; font-weight: 600;
+
+.customizer-grid-2 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+}
+@media (max-width: 600px) { .customizer-grid-2 { grid-template-columns: 1fr; } }
+.customizer-control-grp { display: flex; flex-direction: column; gap: 7px; }
+
+.customizer-slider {
+  width: 100%; accent-color: var(--red); cursor: pointer; height: 6px;
+}
+.customizer-select, .customizer-input {
+  background: var(--surf2); border: 1px solid var(--line2); border-radius: 8px;
+  color: var(--text); font-size: 12px; padding: 7px 11px; font-family: var(--sans);
+  outline: none; transition: border-color .15s;
+}
+.customizer-select:focus, .customizer-input:focus { border-color: var(--red); }
+.customizer-input { font-family: var(--mono); font-size: 11.5px; }
+
+.source-mode-toggles { display: flex; align-items: center; gap: 12px; }
+.radio-label, .checkbox-label {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px;
+  color: var(--text2); cursor: pointer; user-select: none;
+}
+.radio-label input, .checkbox-label input { accent-color: var(--red); }
+.customizer-toggles-row {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  padding: 8px 0; border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line);
+}
+
+.playground-stage {
+  min-height: 100px; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle, rgba(224,48,42,0.04) 0%, rgba(12,12,16,0.6) 100%);
+  border-radius: 12px; padding: 28px 20px; border: 1px dashed var(--line2);
+  position: relative;
+}
+
+.code-generator-box {
+  background: var(--ink); border: 1px solid var(--line2); border-radius: 10px;
+  overflow: hidden;
+}
+.code-generator-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px; background: var(--surf2); border-bottom: 1px solid var(--line);
+}
+.code-generator-title {
+  font-size: 10px; font-family: var(--mono); text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text3); font-weight: 600;
+}
+.btn-copy-code {
+  display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
+  border-radius: 6px; background: var(--surf3); border: 1px solid var(--line2);
+  color: var(--text2); font-size: 11px; font-weight: 600; cursor: pointer;
+  transition: all .15s; font-family: var(--sans);
+}
+.btn-copy-code:hover { border-color: var(--red); color: var(--text); }
+.btn-copy-code svg { width: 12px; height: 12px; }
+.btn-copy-code.copied { border-color: var(--green); color: var(--green); }
+.code-generator-pre {
+  margin: 0; padding: 12px 16px; font-family: var(--mono); font-size: 11.5px;
+  line-height: 1.6; color: #d0d0e0; overflow-x: auto;
 }
 
 /* ────────────────────────────────────────────
@@ -825,22 +901,72 @@ td code { font-family: var(--mono); font-size: 11px; background: var(--surf2); p
    FOOTER
 ──────────────────────────────────────────── */
 .site-footer {
-  padding: 36px 0; border-top: 1px solid var(--line); margin-top: 80px;
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  padding: 48px 0 40px; border-top: 1px solid var(--line); margin-top: 80px;
+  display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 32px;
 }
-.footer-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+.footer-left { display: flex; flex-direction: column; gap: 12px; max-width: 420px; }
+.footer-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
 .footer-brand-logo {
-  width: 28px; height: 28px; border-radius: 8px;
-  background: linear-gradient(135deg, #1a0404, #280808);
-  border: 1px solid #3a1010; display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 9px;
+  background: linear-gradient(135deg, #1f0505, #350c0c);
+  border: 1px solid #4a1414; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(224,48,42,0.18);
 }
-.footer-brand-logo svg { width: 14px; height: 14px; color: var(--red); }
-.footer-text { font-size: 12px; color: var(--text3); }
-.footer-a { color: var(--text3); text-decoration: none; transition: color .15s; }
-.footer-a:hover { color: var(--text2); }
-.footer-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.footer-links { display: flex; gap: 16px; }
-.footer-note { font-size: 11px; color: var(--text4); font-family: var(--sans); }
+.footer-brand-logo svg { width: 16px; height: 16px; color: var(--red); }
+.footer-desc { font-size: 12.5px; color: var(--text3); line-height: 1.6; }
+.footer-copyright { font-size: 11.5px; color: var(--text4); font-family: var(--mono); }
+
+.footer-right {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 18px;
+}
+@media (max-width: 700px) {
+  .footer-right { align-items: flex-start; }
+}
+
+/* Animated Ko-Fi Support Button */
+.kofi-card-btn {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 10px 18px; border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 94, 91, 0.12), rgba(255, 94, 91, 0.04));
+  border: 1px solid rgba(255, 94, 91, 0.32);
+  text-decoration: none; color: var(--text);
+  transition: all .25s cubic-bezier(.22,1,.36,1);
+  position: relative; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(255, 94, 91, 0.14);
+}
+.kofi-card-btn::before {
+  content: ''; position: absolute; inset: -100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  transform: rotate(25deg);
+  animation: kofiShine 4s infinite ease-in-out;
+}
+@keyframes kofiShine {
+  0% { transform: translateX(-100%) rotate(25deg); }
+  35%, 100% { transform: translateX(200%) rotate(25deg); }
+}
+.kofi-card-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 94, 91, 0.65);
+  box-shadow: 0 8px 28px rgba(255, 94, 91, 0.3);
+  background: linear-gradient(135deg, rgba(255, 94, 91, 0.22), rgba(255, 94, 91, 0.09));
+}
+.kofi-icon-bubble {
+  width: 32px; height: 32px; border-radius: 8px; background: #ff5e5b;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  flex-shrink: 0; box-shadow: 0 2px 8px rgba(255, 94, 91, 0.45);
+}
+.kofi-icon-bubble svg { width: 17px; height: 17px; }
+.kofi-text-box { display: flex; flex-direction: column; text-align: left; }
+.kofi-title { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.2; }
+.kofi-sub { font-size: 10.5px; color: rgba(255, 255, 255, 0.68); }
+.kofi-badge-arrow { font-size: 14px; color: #ff5e5b; font-weight: 700; transition: transform .2s; }
+.kofi-card-btn:hover .kofi-badge-arrow { transform: translateX(3px); }
+
+.footer-links { display: flex; gap: 16px; flex-wrap: wrap; }
+.footer-a { font-size: 12.5px; color: var(--text3); text-decoration: none; transition: color .15s; font-weight: 500; }
+.footer-a:hover { color: var(--text); }
+.footer-note { font-size: 11px; color: var(--text4); font-family: var(--mono); }
+
 
 /* ────────────────────────────────────────────
    RESPONSIVE
@@ -885,17 +1011,21 @@ td code { font-family: var(--mono); font-size: 11px; background: var(--surf2); p
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
     </div>
     <div>
-      <div class="brand-name">ESP Flash Button</div>
-      <div class="brand-tag">by SKR Electronics Lab</div>
+      <div class="brand-name">ESP Flasher Button</div>
+      <div class="brand-tag brand-shimmer">by SKR Electronics Lab</div>
     </div>
   </a>
   <nav class="nav">
+    <a class="nav-a" href="#generator">Generator</a>
     <a class="nav-a" href="#usage">Usage</a>
     <a class="nav-a" href="#features">Features</a>
     <a class="nav-a" href="#serial-monitor">Serial Monitor</a>
     <a class="nav-a" href="#compare">Compare</a>
     <a class="nav-a" href="#faq">FAQ</a>
-    <a class="nav-cta" href="https://skrelectronicslab.com" target="_blank" rel="noopener">SKR Lab</a>
+    <a class="nav-gh" href="https://github.com/skr-electronics-lab/esp-flasher-button" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+      GitHub
+    </a>
   </nav>
 </header>
 
@@ -933,97 +1063,122 @@ td code { font-family: var(--mono); font-size: 11px; background: var(--surf2); p
     </a>
   </div>
 
-  <!-- Demo button block -->
-  <div class="demo-wrap rev">
+  <!-- ── INTERACTIVE GENERATOR & PLAYGROUND ── -->
+  <div class="demo-wrap rev" id="generator">
     <div class="demo-header">
       <div class="demo-dots">
         <div class="demo-dot demo-dot-r"></div>
         <div class="demo-dot demo-dot-y"></div>
         <div class="demo-dot demo-dot-g"></div>
       </div>
-      <div class="demo-title">esp-flash-button — live demo</div>
+      <div class="demo-title">esp-flasher-button &mdash; interactive generator</div>
       <div style="width:60px;"></div>
     </div>
     <div class="demo-body">
       <div class="demo-live-label">
         <span class="demo-live-dot"></span>
-        Interactive demo &mdash; connect a real device to flash
+        Interactive Live Component &mdash; Design your button &amp; copy code
       </div>
 
-      <div class="demo-btn-row">
-        <esp-flash-button manifest="demo-manifest.json" label="Install Demo Firmware"></esp-flash-button>
-      </div>
-
-      <div class="demo-themes-section">
-        <div class="demo-themes-label">Flasher modal theme — dark vs light (click to open)</div>
-        <div class="demo-modal-row">
-          <div class="demo-modal-card">
-            <span class="demo-theme-name">Dark Theme</span>
-            <esp-flash-button manifest="demo-manifest.json" label="Flash (Dark)" theme="red"></esp-flash-button>
+      <div class="customizer-card">
+        <div class="customizer-head">
+          <div>
+            <div class="customizer-title">Button Customizer &amp; Code Playground</div>
+            <div class="customizer-subtitle">Configure theme, numeric sizing, source, and layout in real time</div>
           </div>
-          <div class="demo-modal-card">
-            <span class="demo-theme-name">Light Theme</span>
-            <esp-flash-button manifest="demo-manifest.json" label="Flash (Light)" theme="light"></esp-flash-button>
-          </div>
-        </div>
-      </div>
-
-      <div class="demo-themes-section">
-        <div class="demo-themes-label">All button themes — each has a unique visual style</div>
-        <div class="demo-theme-grid">
-          <div class="demo-theme-card"><span class="demo-theme-name">Red</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="red"></esp-flash-button></div>
-          <div class="demo-theme-card"><span class="demo-theme-name">Dark</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="dark"></esp-flash-button></div>
-          <div class="demo-theme-card"><span class="demo-theme-name">Green</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="green"></esp-flash-button></div>
-          <div class="demo-theme-card"><span class="demo-theme-name">Light</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="light"></esp-flash-button></div>
-          <div class="demo-theme-card"><span class="demo-theme-name">Ghost</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="ghost"></esp-flash-button></div>
-          <div class="demo-theme-card"><span class="demo-theme-name">Minimal</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="minimal"></esp-flash-button></div>
-        </div>
-      </div>
-
-      <div class="demo-themes-section">
-        <div class="demo-themes-label">Numeric button sizing — pass any number directly (e.g. size="14", size="18", size="22")</div>
-        <div class="demo-theme-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: center;">
-          <div class="demo-theme-card"><span class="demo-theme-name">Mini &middot; size="12"</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="light" size="12"></esp-flash-button></div>
-          <div class="demo-theme-card"><span class="demo-theme-name">Standard &middot; size="14.5"</span><esp-flash-button manifest="demo-manifest.json" label="Install Firmware" theme="light" size="14.5"></esp-flash-button></div>
-          <div class="demo-theme-card"><span class="demo-theme-name">Prominent &middot; size="18"</span><esp-flash-button manifest="demo-manifest.json" label="Install Firmware" theme="light" size="18"></esp-flash-button></div>
-          <div class="demo-theme-card"><span class="demo-theme-name">Hero &middot; size="22"</span><esp-flash-button manifest="demo-manifest.json" label="Install Firmware" theme="red" size="22"></esp-flash-button></div>
+          <div class="customizer-badge" id="custom-size-badge">size="18"</div>
         </div>
 
-        <div style="margin-top:20px; background:var(--surf); border:1px solid var(--line2); border-radius:12px; padding:20px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
-            <div>
-              <div style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:3px;">Interactive Button Customizer &amp; Size Playground</div>
-              <div style="font-size:11.5px; color:var(--text3);">Drag slider to test any exact size in real time, customize width &amp; theme</div>
+        <!-- Theme Selection -->
+        <div class="customizer-row">
+          <span class="customizer-label">Button Theme</span>
+          <div class="theme-pills">
+            <button type="button" class="theme-pill active" data-theme="red">Red (Default)</button>
+            <button type="button" class="theme-pill" data-theme="dark">Dark</button>
+            <button type="button" class="theme-pill" data-theme="green">Green</button>
+            <button type="button" class="theme-pill" data-theme="light">Light</button>
+            <button type="button" class="theme-pill" data-theme="ghost">Ghost</button>
+            <button type="button" class="theme-pill" data-theme="minimal">Minimal</button>
+          </div>
+        </div>
+
+        <!-- Size & Radius Controls -->
+        <div class="customizer-grid-2">
+          <div class="customizer-control-grp">
+            <div class="customizer-label-row">
+              <span class="customizer-label">Size Scale</span>
+              <span class="customizer-val" id="size-val-txt">18px</span>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-              <span id="custom-size-badge" style="font-family:var(--mono); font-size:12px; color:var(--red); font-weight:700; background:var(--surf2); border:1px solid var(--line2); padding:4px 10px; border-radius:6px;">size="18"</span>
-            </div>
+            <input type="range" id="size-slider" min="11" max="28" value="18" step="1" class="customizer-slider" />
           </div>
 
-          <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px; flex-wrap:wrap;">
-            <label style="font-size:12px; color:var(--text2); display:flex; align-items:center; gap:10px; flex:1; min-width:200px;">
-              <span>Size:</span>
-              <input type="range" id="size-slider" min="11" max="28" value="18" step="1" style="flex:1; accent-color:var(--red); cursor:pointer;">
-            </label>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <button type="button" class="custom-theme-btn active" data-theme="red" style="padding:4px 10px; font-size:11px; border-radius:6px; background:var(--surf3); border:1px solid var(--red); color:var(--text); cursor:pointer;">Red</button>
-              <button type="button" class="custom-theme-btn" data-theme="dark" style="padding:4px 10px; font-size:11px; border-radius:6px; background:var(--surf2); border:1px solid var(--line); color:var(--text3); cursor:pointer;">Dark</button>
-              <button type="button" class="custom-theme-btn" data-theme="green" style="padding:4px 10px; font-size:11px; border-radius:6px; background:var(--surf2); border:1px solid var(--line); color:var(--text3); cursor:pointer;">Green</button>
-              <button type="button" class="custom-theme-btn" data-theme="light" style="padding:4px 10px; font-size:11px; border-radius:6px; background:var(--surf2); border:1px solid var(--line); color:var(--text3); cursor:pointer;">Light</button>
+          <div class="customizer-control-grp">
+            <div class="customizer-label-row">
+              <span class="customizer-label">Corner Radius</span>
             </div>
-            <label style="font-size:11.5px; color:var(--text2); display:flex; align-items:center; gap:6px; cursor:pointer;">
-              <input type="checkbox" id="size-fullwidth-chk" style="accent-color:var(--red);">
-              <span>Full width</span>
-            </label>
+            <select id="radius-select" class="customizer-select">
+              <option value="" selected>Default (Theme)</option>
+              <option value="pill">Pill (100px)</option>
+              <option value="12">Rounded (12px)</option>
+              <option value="6">Subtle (6px)</option>
+              <option value="0">Sharp (0px)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Label & Firmware Source Controls -->
+        <div class="customizer-grid-2">
+          <div class="customizer-control-grp">
+            <span class="customizer-label">Button Label</span>
+            <input type="text" id="label-input" value="Install Firmware" class="customizer-input" placeholder="e.g. Flash Device" />
           </div>
 
-          <div style="min-height:90px; display:flex; align-items:center; justify-content:center; background:var(--surf2); border-radius:10px; padding:20px; border:1px dashed var(--line2); margin-bottom:14px;" id="playground-btn-container">
-            <esp-flash-button id="playground-btn" manifest="demo-manifest.json" label="Install Firmware" theme="red" size="18"></esp-flash-button>
+          <div class="customizer-control-grp">
+            <div class="customizer-label-row">
+              <span class="customizer-label">Firmware Source</span>
+              <div class="source-mode-toggles">
+                <label class="radio-label"><input type="radio" name="src-mode" value="manifest" checked /> Manifest</label>
+                <label class="radio-label"><input type="radio" name="src-mode" value="github" /> GitHub</label>
+              </div>
+            </div>
+            <input type="text" id="source-input" value="demo-manifest.json" class="customizer-input" placeholder="Manifest URL or owner/repo" />
           </div>
+        </div>
 
-          <div class="code-wrap" style="margin:0;">
-            <pre id="playground-code" style="padding:10px 14px; font-size:11.5px; border-radius:8px;">&lt;esp-flash-button manifest="https://yoursite.com/manifest.json" size="18" theme="red"&gt;&lt;/esp-flash-button&gt;</pre>
+        <!-- Options Toggles -->
+        <div class="customizer-toggles-row">
+          <label class="checkbox-label">
+            <input type="checkbox" id="size-fullwidth-chk" />
+            <span>Full Width (<code>full-width</code>)</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="erase-chk" />
+            <span>Erase Flash Before Writing (<code>erase-first</code>)</span>
+          </label>
+        </div>
+
+        <!-- Live Preview Stage -->
+        <div class="playground-stage" id="playground-btn-container">
+          <esp-flasher-button id="playground-btn" manifest="demo-manifest.json" label="Install Firmware" theme="red" size="18"></esp-flasher-button>
+        </div>
+
+        <!-- Generated Code Box -->
+        <div class="code-generator-box">
+          <div class="code-generator-bar">
+            <span class="code-generator-title">Generated HTML Snippet</span>
+            <button type="button" class="btn-copy-code" id="btn-copy-code">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy Code</span>
+            </button>
           </div>
+          <pre class="code-generator-pre"><code id="playground-code">&lt;script type="module" src="https://skr-electronics-lab.github.io/esp-flasher-button/esp-flasher-button.js"&gt;&lt;/script&gt;
+
+&lt;esp-flasher-button 
+  manifest="demo-manifest.json" 
+  label="Install Firmware" 
+  theme="red" 
+  size="18"&gt;
+&lt;/esp-flasher-button&gt;</code></pre>
         </div>
       </div>
     </div>
@@ -1608,18 +1763,18 @@ document.querySelector(<span class="c-str">'esp-flash-button'</span>)
 
 <div class="section-divider"></div>
 
-<!-- ── SERIAL MONITOR ── -->
+<!-- ── REAL SERIAL MONITOR ── -->
 <section class="section rev" id="serial-monitor">
   <div class="section-head">
-    <div class="tag">Serial Monitor</div>
-    <h2 class="section-h">Debug your firmware without leaving the browser</h2>
-    <p class="section-sub">After flashing, open the built-in serial monitor directly from the success screen. Real-time line-buffered output, configurable baud rate and line endings, DTR/RTS signal control, and a command input — all in the browser.</p>
+    <div class="tag">Web Serial Terminal</div>
+    <h2 class="section-h">Direct Hardware Serial Monitor &amp; Console</h2>
+    <p class="section-sub">Connect directly to your ESP32 / ESP8266 board via native browser Web Serial. Transmit and receive live UART data, inspect boot logs, toggle hardware DTR/RTS lines, and reset the chip in real time.</p>
   </div>
 
   <div class="sm-demo-outer rev">
     <div class="sm-demo-label">
-      <span class="sm-live-dot"></span>
-      Interactive preview — simulated output below, real output requires Web Serial
+      <span class="sm-live-dot" id="real-sm-pulse-dot"></span>
+      <span id="real-sm-mode-label">Native Web Serial Terminal &mdash; Connect via USB data cable</span>
     </div>
     <div class="sm-demo-inner">
       <div class="__efb-sm-header">
@@ -1627,54 +1782,66 @@ document.querySelector(<span class="c-str">'esp-flash-button'</span>)
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
         </div>
         <div class="__efb-sm-htitles">
-          <div class="__efb-sm-htitle">Serial Monitor</div>
+          <div class="__efb-sm-htitle">ESP Web Serial Console</div>
           <div class="__efb-sm-hsub">
-            <span class="__efb-sm-status-dot"></span>
-            <span id="demo-conn-status">Connected at 115200 baud</span>
+            <span class="__efb-sm-status-dot" id="real-sm-status-dot" style="background:#555;box-shadow:none;"></span>
+            <span id="real-conn-status">Disconnected &mdash; Click "Connect Device" to begin</span>
           </div>
         </div>
+        <button class="real-sm-connect-btn" id="real-connect-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <span id="real-connect-btn-txt">Connect Device</span>
+        </button>
       </div>
       <div class="__efb-sm-toolbar">
         <div class="__efb-sm-toolbar-left">
           <span class="__efb-sm-label">Baud</span>
-          <select class="__efb-sm-select" id="demo-baud">
+          <select class="__efb-sm-select" id="real-baud">
             <option>9600</option><option>19200</option><option>38400</option>
             <option>57600</option><option>74880</option><option selected>115200</option>
             <option>230400</option><option>460800</option><option>921600</option>
           </select>
-          <span class="__efb-sm-label">Line ending</span>
-          <select class="__efb-sm-select" id="demo-eol">
+          <span class="__efb-sm-label">Line Ending</span>
+          <select class="__efb-sm-select" id="real-eol">
+            <option value="\r\n" selected>CR+LF (\r\n)</option>
+            <option value="\n">LF (\n)</option>
+            <option value="\r">CR (\r)</option>
             <option value="">None</option>
-            <option value="\r\n" selected>CR+LF</option>
-            <option value="\n">LF</option>
-            <option value="\r">CR</option>
           </select>
+          <label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
+            <input type="checkbox" id="real-autoscroll" checked style="accent-color:var(--red);" />
+            <span>Autoscroll</span>
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
+            <input type="checkbox" id="real-timestamps" style="accent-color:var(--red);" />
+            <span>Timestamps</span>
+          </label>
         </div>
-        <button class="__efb-sm-tbtn active" id="demo-dtr-btn">DTR</button>
-        <button class="__efb-sm-tbtn" id="demo-rts-btn">RST</button>
-        <button class="__efb-sm-tbtn __efb-sm-tbtn-clear" id="demo-clear-btn">
+        <button class="__efb-sm-tbtn" id="real-dtr-btn" title="Toggle Data Terminal Ready (GPIO0/BOOT)">DTR</button>
+        <button class="__efb-sm-tbtn" id="real-rts-btn" title="Send hardware reset pulse (EN/RTS)">RST Pulse</button>
+        <button class="__efb-sm-tbtn __efb-sm-tbtn-clear" id="real-clear-btn" title="Clear console output">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
           Clear
         </button>
       </div>
-      <div class="__efb-sm-output" id="demo-output">
-        <span class="__efb-sm-line sys" id="demo-placeholder">Simulated ESP32 output — use the input below to send commands</span>
+      <div class="__efb-sm-output" id="real-output">
+        <span class="__efb-sm-line sys" id="real-placeholder">Terminal ready. Click [Connect Device] and select your ESP serial port (e.g. CP2102, CH340, USB JTAG/serial).</span>
       </div>
       <div class="__efb-sm-input-row">
-        <input class="__efb-sm-input" id="demo-input" placeholder="Type a command and press Enter or click Send" autocomplete="off" />
-        <button class="__efb-sm-send" id="demo-send-btn">
+        <input class="__efb-sm-input" id="real-input" placeholder="Connect device to send commands..." autocomplete="off" disabled />
+        <button class="__efb-sm-send" id="real-send-btn" disabled>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           Send
         </button>
       </div>
       <div class="__efb-sm-footer">
-        <a class="__efb-sm-footer-credit" href="https://skr-electronics-lab.github.io/esp-flasher-button/" target="_blank" rel="noopener">Built with ESP Flasher Button</a>
-        <span class="__efb-sm-count" id="demo-line-count">0 lines</span>
+        <div class="brand-shimmer" style="font-size:10px;font-family:var(--mono);">ESP Flasher Button &bull; SKR Electronics Lab</div>
+        <span class="__efb-sm-count" id="real-line-count">0 lines</span>
       </div>
     </div>
     <div class="ws-note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <div>The real Serial Monitor opens inside the flash dialog after a successful flash. It connects directly to your device via Web Serial — no relay server. This preview above is a fully functional simulator using the same UI. Requires Chrome 89+, Edge 89+, or Opera 76+ with a real ESP device connected via USB.</div>
+      <div><strong>Real Web Serial Terminal:</strong> This is a 100% functional serial console communicating directly with your microchip via native Web Serial. Supported on Google Chrome, Microsoft Edge, Brave, and Opera on desktop. Android Chrome and iOS Safari are not supported due to mobile USB CDC restrictions.</div>
     </div>
   </div>
 </section>
@@ -1769,7 +1936,7 @@ document.querySelector(<span class="c-str">'esp-flash-button'</span>)
     </div>
     <div class="faq-item">
       <div class="faq-q">Which browsers are supported?<span class="faq-arrow"></span></div>
-      <div class="faq-a">Google Chrome 89+, Microsoft Edge 89+, and Opera 76+ on desktop. The Web Serial API is required, which Firefox and Safari do not currently support. Mobile browsers are also not supported due to Web Serial API limitations.</div>
+      <div class="faq-a">Desktop Chromium browsers: Google Chrome 89+, Microsoft Edge 89+, Brave, and Opera 76+ on Windows, macOS, Linux, and ChromeOS. <strong>Mobile devices (including Android Chrome and iOS Safari) are not supported</strong> because mobile operating systems restrict browser access to USB CDC-ACM serial ports without custom root/kernel drivers. Always use a desktop or laptop computer connected with a standard USB data cable.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Do I need to hold the BOOT button?<span class="faq-arrow"></span></div>
@@ -1851,27 +2018,45 @@ document.querySelector(<span class="c-str">'esp-flash-button'</span>)
 
 <!-- ── FOOTER ── -->
 <footer class="site-footer">
-  <a class="footer-brand" href="#">
-    <div class="footer-brand-logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+  <div class="footer-left">
+    <a class="footer-brand" href="#">
+      <div class="footer-brand-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.01em;">ESP Flasher Button</div>
+        <div class="brand-shimmer" style="font-size:11px;font-family:var(--mono);margin-top:2px;">by SKR Electronics Lab</div>
+      </div>
+    </a>
+    <p class="footer-desc">
+      Ultra-fast, zero-dependency in-browser firmware installer and Web Serial terminal for ESP32 &amp; ESP8266 devices. 100% client-side flashing over native Web Serial.
+    </p>
+    <div class="footer-copyright">
+      &copy; <span id="yr"></span> SKR Electronics Lab &middot; MIT Licensed &middot; Built for the global maker &amp; IoT community.
     </div>
-    <div>
-      <div style="font-size:13px;font-weight:700;color:var(--text);">ESP Flash Button</div>
-      <div style="font-size:10px;color:var(--text4);font-family:var(--mono);">by SKR Electronics Lab</div>
-    </div>
-  </a>
-  <div class="footer-text">
-    &copy; <span id="yr"></span>
-    <a class="footer-a" href="https://skrelectronicslab.com" target="_blank">SKR Electronics Lab</a>.
-    All flashing is local. No data is uploaded.
   </div>
-  <div class="footer-meta">
+
+  <div class="footer-right">
+    <!-- Animated Ko-Fi Support Button -->
+    <a href="https://ko-fi.com/skrelectronicslab" target="_blank" rel="noopener" class="kofi-card-btn" title="Support SKR Electronics Lab on Ko-fi">
+      <div class="kofi-icon-bubble">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.04-.228-.158-.228-.158s-2.75-2.523-3.996-3.976c-1.369-1.596-1.506-3.69-.136-4.966 1.344-1.251 3.655-.916 4.316.533.662-1.449 2.973-1.784 4.318-.533 1.369 1.276 1.232 3.37-.152 4.966zm6.364-1.423c-.359 1.895-2.023 2.193-3.619 2.193h-.033V6.366h.033c1.596 0 3.26.298 3.619 2.193.308 1.626-.145 3.036-.32 3.477z"/></svg>
+      </div>
+      <div class="kofi-text-box">
+        <span class="kofi-title">Support on Ko-fi</span>
+        <span class="kofi-sub">Fuel open-source hardware &amp; tools</span>
+      </div>
+      <span class="kofi-badge-arrow">&rarr;</span>
+    </a>
+
     <div class="footer-links">
-      <a class="footer-a" href="https://github.com/espressif/esptool-js" target="_blank">esptool-js</a>
-      <a class="footer-a" href="https://github.com/skr-electronics-lab/esp-flasher-button" target="_blank">GitHub</a>
-      <a class="footer-a" href="https://youtube.com/@skr_electronics_lab" target="_blank">SKR Lab</a>
+      <a class="footer-a" href="https://github.com/skr-electronics-lab/esp-flasher-button" target="_blank" rel="noopener">GitHub</a>
+      <a class="footer-a" href="https://youtube.com/@skr_electronics_lab" target="_blank" rel="noopener">YouTube</a>
+      <a class="footer-a" href="https://twitter.com/skrelectronics" target="_blank" rel="noopener">Twitter (X)</a>
+      <a class="footer-a" href="https://instagram.com/skr_electronics_lab" target="_blank" rel="noopener">Instagram</a>
+      <a class="footer-a" href="https://github.com/espressif/esptool-js" target="_blank" rel="noopener">esptool-js</a>
     </div>
-    <div class="footer-note">Powered by <a href="https://skr-electronics-lab.github.io/esp-flasher-button/" style="color:#555;text-decoration:none;font-weight:500;" target="_blank">esp-flasher-button</a></div>
+    <div class="footer-note">Powered by <a href="https://skr-electronics-lab.github.io/esp-flasher-button/" style="color:#777;text-decoration:none;font-weight:600;" target="_blank">esp-flasher-button</a></div>
   </div>
 </footer>
 
@@ -2120,138 +2305,305 @@ document.querySelectorAll('.faq-q').forEach(el => {
   });
 });
 
-/* ── Demo Serial Monitor simulator ── */
+/* ── Real Native Web Serial Terminal ── */
 (function() {
-  const output   = document.getElementById('demo-output');
-  const inputEl  = document.getElementById('demo-input');
-  const sendBtn  = document.getElementById('demo-send-btn');
-  const clearBtn = document.getElementById('demo-clear-btn');
-  const dtrBtn   = document.getElementById('demo-dtr-btn');
-  const rtsBtn   = document.getElementById('demo-rts-btn');
-  const countEl  = document.getElementById('demo-line-count');
-  let lineCount  = 0;
-  let dtrState   = true;
-  let simInterval = null;
+  const connectBtn = document.getElementById('real-connect-btn');
+  const connectBtnTxt = document.getElementById('real-connect-btn-txt');
+  const statusDot = document.getElementById('real-sm-status-dot');
+  const statusTxt = document.getElementById('real-conn-status');
+  const baudSelect = document.getElementById('real-baud');
+  const eolSelect = document.getElementById('real-eol');
+  const autoScrollChk = document.getElementById('real-autoscroll');
+  const tsChk = document.getElementById('real-timestamps');
+  const dtrBtn = document.getElementById('real-dtr-btn');
+  const rtsBtn = document.getElementById('real-rts-btn');
+  const clearBtn = document.getElementById('real-clear-btn');
+  const output = document.getElementById('real-output');
+  const inputEl = document.getElementById('real-input');
+  const sendBtn = document.getElementById('real-send-btn');
+  const countEl = document.getElementById('real-line-count');
+  const pulseDot = document.getElementById('real-sm-pulse-dot');
+  const modeLabel = document.getElementById('real-sm-mode-label');
 
-  const BOOT_SEQ = [
-    { t: 'sys', v: '[Serial monitor opened at 115200 baud]' },
-    { t: 'sys', v: 'rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)' },
-    { t: 'rx',  v: 'configsip: 0, SPIWP:0xee' },
-    { t: 'rx',  v: 'clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00' },
-    { t: 'rx',  v: 'mode:DIO, clock div:2' },
-    { t: 'rx',  v: 'load:0x3fff0030,len:1184' },
-    { t: 'rx',  v: 'load:0x40078000,len:13232' },
-    { t: 'rx',  v: 'ho 0 tail 12 room 4' },
-    { t: 'rx',  v: 'load:0x40080400,len:3028' },
-    { t: 'sys', v: 'entry 0x400805e4' },
-    { t: 'ok',  v: 'I (312) cpu_start: ESP-IDF v5.1.2' },
-    { t: 'ok',  v: 'I (312) cpu_start: Pro cpu up.' },
-    { t: 'ok',  v: 'I (349) cpu_start: Starting scheduler on PRO CPU.' },
-    { t: 'rx',  v: 'I (349) main: Firmware v1.0.0 starting...' },
-    { t: 'ok',  v: 'I (362) wifi: WiFi initialized' },
-    { t: 'rx',  v: 'I (401) main: Connecting to WiFi...' },
-    { t: 'ok',  v: 'I (2843) main: WiFi connected. IP: 192.168.1.42' },
-    { t: 'rx',  v: 'I (2844) main: HTTP server started on port 80' },
-  ];
+  let port = null;
+  let reader = null;
+  let lineCount = 0;
+  let dtrState = false;
+  let isConnected = false;
+  let keepReading = false;
 
-  function addLine(type, text) {
-    const placeholder = document.getElementById('demo-placeholder');
+  function logLine(type, text) {
+    const placeholder = document.getElementById('real-placeholder');
     if (placeholder) placeholder.remove();
-    while (output.childElementCount > 300) output.removeChild(output.firstChild);
+
+    while (output.childElementCount > 400) {
+      output.removeChild(output.firstChild);
+    }
+
     const span = document.createElement('span');
     span.className = '__efb-sm-line ' + type;
-    span.textContent = text;
+
+    let prefix = '';
+    if (tsChk && tsChk.checked) {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      const ms = String(now.getMilliseconds()).padStart(3, '0');
+      prefix = `[${h}:${m}:${s}.${ms}] `;
+    }
+
+    span.textContent = prefix + text;
     output.appendChild(span);
-    output.scrollTop = output.scrollHeight;
+
+    if (autoScrollChk && autoScrollChk.checked) {
+      output.scrollTop = output.scrollHeight;
+    }
+
     lineCount++;
-    countEl.textContent = lineCount + (lineCount === 1 ? ' line' : ' lines');
+    if (countEl) countEl.textContent = lineCount + (lineCount === 1 ? ' line' : ' lines');
   }
 
-  // Play boot sequence
-  let bootIdx = 0;
-  function playBoot() {
-    if (bootIdx < BOOT_SEQ.length) {
-      const line = BOOT_SEQ[bootIdx++];
-      addLine(line.t, line.v);
-      setTimeout(playBoot, 120 + Math.random() * 140);
+  function setConnectedUI(connected, baud) {
+    isConnected = connected;
+    if (connected) {
+      if (statusDot) {
+        statusDot.style.background = 'var(--green)';
+        statusDot.style.boxShadow = '0 0 8px var(--green)';
+      }
+      if (statusTxt) {
+        statusTxt.textContent = `Connected @ ${baud || baudSelect.value} baud`;
+        statusTxt.style.color = 'var(--green)';
+      }
+      if (connectBtn) {
+        connectBtn.classList.add('connected');
+        if (connectBtnTxt) connectBtnTxt.textContent = 'Disconnect';
+      }
+      if (inputEl) {
+        inputEl.disabled = false;
+        inputEl.placeholder = 'Type a serial command and press Enter...';
+        inputEl.focus();
+      }
+      if (sendBtn) sendBtn.disabled = false;
+      if (pulseDot) {
+        pulseDot.style.background = 'var(--green)';
+        pulseDot.style.boxShadow = '0 0 8px var(--green)';
+      }
+      if (modeLabel) {
+        modeLabel.textContent = 'Native Web Serial Active — Real-time bidirectional UART communication';
+      }
     } else {
-      startLiveOutput();
+      if (statusDot) {
+        statusDot.style.background = '#555';
+        statusDot.style.boxShadow = 'none';
+      }
+      if (statusTxt) {
+        statusTxt.textContent = 'Disconnected — Click "Connect Device" to begin';
+        statusTxt.style.color = 'var(--text3)';
+      }
+      if (connectBtn) {
+        connectBtn.classList.remove('connected');
+        if (connectBtnTxt) connectBtnTxt.textContent = 'Connect Device';
+      }
+      if (inputEl) {
+        inputEl.disabled = true;
+        inputEl.placeholder = 'Connect device to send commands...';
+      }
+      if (sendBtn) sendBtn.disabled = true;
+      if (pulseDot) {
+        pulseDot.style.background = 'var(--red)';
+        pulseDot.style.boxShadow = '0 0 5px var(--red)';
+      }
+      if (modeLabel) {
+        modeLabel.textContent = 'Native Web Serial Terminal — Connect via USB data cable';
+      }
     }
   }
-  setTimeout(playBoot, 500);
 
-  // Periodic live output
-  const LIVE_LINES = [
-    { t: 'rx', v: 'I (5001) main: Loop tick — uptime 5s' },
-    { t: 'rx', v: 'I (10001) main: Loop tick — uptime 10s' },
-    { t: 'rx', v: 'I (10002) sensor: Temperature 24.7 C, Humidity 58.2%' },
-    { t: 'rx', v: 'I (15001) main: Loop tick — uptime 15s' },
-    { t: 'rx', v: 'I (20001) main: Loop tick — uptime 20s' },
-    { t: 'rx', v: 'I (20003) wifi: RSSI -58 dBm' },
-    { t: 'rx', v: 'I (25001) main: Loop tick — uptime 25s' },
-    { t: 'rx', v: 'I (25004) sensor: Temperature 24.8 C, Humidity 58.0%' },
-    { t: 'rx', v: 'I (30001) main: Loop tick — uptime 30s' },
-  ];
-  let liveIdx = 0;
-  function startLiveOutput() {
-    simInterval = setInterval(() => {
-      if (liveIdx < LIVE_LINES.length) {
-        const l = LIVE_LINES[liveIdx++];
-        addLine(l.t, l.v);
-      } else {
-        clearInterval(simInterval);
+  async function connectSerial() {
+    if (!('serial' in navigator)) {
+      alert('Web Serial API is not supported in this browser.\n\nPlease open this site in Google Chrome, Microsoft Edge, Brave, or Opera on desktop (Windows, macOS, Linux). Note that mobile browsers (including Android Chrome) do not support Web Serial.');
+      return;
+    }
+
+    try {
+      port = await navigator.serial.requestPort();
+    } catch (err) {
+      if (err.name !== 'NotFoundError') {
+        logLine('err', `Port selection error: ${err.message}`);
       }
-    }, 5000);
+      return;
+    }
+
+    const baudRate = parseInt(baudSelect.value, 10) || 115200;
+    try {
+      await port.open({ baudRate });
+      setConnectedUI(true, baudRate);
+      logLine('ok', `[PORT OPEN] Connected successfully at ${baudRate} baud.`);
+    } catch (err) {
+      logLine('err', `Failed to open port: ${err.message}`);
+      port = null;
+      setConnectedUI(false);
+      return;
+    }
+
+    keepReading = true;
+    let buffer = '';
+    const decoder = new TextDecoder();
+
+    try {
+      while (port && port.readable && keepReading) {
+        reader = port.readable.getReader();
+        try {
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            if (value) {
+              const chunk = decoder.decode(value, { stream: true });
+              buffer += chunk;
+              const lines = buffer.split(/\r?\n/);
+              buffer = lines.pop(); // save trailing partial piece
+              for (const line of lines) {
+                logLine('rx', line);
+              }
+            }
+          }
+        } catch (readErr) {
+          if (keepReading) {
+            logLine('err', `[STREAM ERROR] ${readErr.message}`);
+          }
+        } finally {
+          reader.releaseLock();
+          reader = null;
+        }
+      }
+    } catch (err) {
+      if (keepReading) {
+        logLine('err', `Read loop exception: ${err.message}`);
+      }
+    } finally {
+      if (buffer) {
+        logLine('rx', buffer);
+        buffer = '';
+      }
+    }
   }
 
-  // Send command
-  function doSend() {
-    const val = inputEl.value.trim();
-    if (!val) return;
+  async function disconnectSerial() {
+    if (!port) return;
+    keepReading = false;
+    logLine('sys', '[DISCONNECTING] Releasing serial port...');
+    try {
+      if (reader) {
+        await reader.cancel();
+      }
+      await port.close();
+      logLine('sys', '[DISCONNECTED] Port closed.');
+    } catch (err) {
+      logLine('err', `Error closing port: ${err.message}`);
+    } finally {
+      port = null;
+      setConnectedUI(false);
+    }
+  }
+
+  if (connectBtn) {
+    connectBtn.addEventListener('click', async () => {
+      if (isConnected) {
+        await disconnectSerial();
+      } else {
+        await connectSerial();
+      }
+    });
+  }
+
+  if (baudSelect) {
+    baudSelect.addEventListener('change', async () => {
+      if (isConnected) {
+        logLine('sys', `[CONFIG] Switching baud rate to ${baudSelect.value}...`);
+        await disconnectSerial();
+        await connectSerial();
+      }
+    });
+  }
+
+  async function doSend() {
+    if (!inputEl) return;
+    const val = inputEl.value;
+    if (!val && !eolSelect.value) return;
+    if (!port || !port.writable) {
+      logLine('err', 'Not connected to a serial port.');
+      return;
+    }
+
     inputEl.value = '';
-    addLine('tx', '> ' + val);
-    // Simulate responses
-    setTimeout(() => {
-      if (val.toLowerCase() === 'status') {
-        addLine('ok', 'OK: System running, uptime 28s, free heap 218432 bytes');
-      } else if (val.toLowerCase() === 'reboot') {
-        addLine('sys', '[RST — device rebooting]');
-        bootIdx = 0; liveIdx = 0;
-        if (simInterval) clearInterval(simInterval);
-        setTimeout(playBoot, 800);
-      } else if (val.toLowerCase() === 'help') {
-        addLine('rx', 'Commands: status, reboot, help');
-      } else {
-        addLine('rx', 'echo: ' + val);
-      }
-    }, 80);
+    const payload = val + (eolSelect ? eolSelect.value : '\r\n');
+    const encoder = new TextEncoder();
+    const data = encoder.encode(payload);
+
+    try {
+      const writer = port.writable.getWriter();
+      await writer.write(data);
+      writer.releaseLock();
+      logLine('tx', '> ' + val);
+    } catch (err) {
+      logLine('err', `Send error: ${err.message}`);
+    }
   }
 
-  sendBtn.addEventListener('click', doSend);
-  inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') doSend(); });
+  if (sendBtn) sendBtn.addEventListener('click', doSend);
+  if (inputEl) {
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') doSend();
+    });
+  }
 
-  clearBtn.addEventListener('click', () => {
-    output.innerHTML = '<span class="__efb-sm-line sys">Cleared.</span>';
-    lineCount = 1; countEl.textContent = '1 line';
-    if (simInterval) clearInterval(simInterval);
-    liveIdx = LIVE_LINES.length; // stop future live
-  });
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (output) output.innerHTML = '';
+      lineCount = 0;
+      if (countEl) countEl.textContent = '0 lines';
+      logLine('sys', 'Console cleared.');
+    });
+  }
 
-  dtrBtn.addEventListener('click', () => {
-    dtrState = !dtrState;
-    dtrBtn.classList.toggle('active', dtrState);
-    addLine('sys', '[DTR ' + (dtrState ? 'ON' : 'OFF') + ']');
-  });
+  if (dtrBtn) {
+    dtrBtn.addEventListener('click', async () => {
+      if (!port) {
+        logLine('sys', 'Connect a serial device to toggle DTR (BOOT/GPIO0).');
+        return;
+      }
+      dtrState = !dtrState;
+      dtrBtn.classList.toggle('active', dtrState);
+      try {
+        await port.setSignals({ dataTerminalReady: dtrState });
+        logLine('sys', `[DTR] Signal set to ${dtrState ? 'HIGH (active)' : 'LOW'}`);
+      } catch (err) {
+        logLine('err', `Failed to set DTR: ${err.message}`);
+      }
+    });
+  }
 
-  rtsBtn.addEventListener('click', () => {
-    addLine('sys', '[RST pulse sent — device resetting]');
-    bootIdx = 0; liveIdx = 0;
-    if (simInterval) clearInterval(simInterval);
-    setTimeout(playBoot, 800);
-  });
+  if (rtsBtn) {
+    rtsBtn.addEventListener('click', async () => {
+      if (!port) {
+        logLine('sys', 'Connect a serial device to send hardware reset pulse.');
+        return;
+      }
+      try {
+        logLine('sys', '[RST] Triggering hardware reset (EN pulse)...');
+        await port.setSignals({ requestToSend: true, dataTerminalReady: false });
+        await new Promise(r => setTimeout(r, 120));
+        await port.setSignals({ requestToSend: false, dataTerminalReady: false });
+        logLine('ok', '[RST] Reset pulse sent. Microchip rebooting...');
+      } catch (err) {
+        logLine('err', `Failed to pulse RTS: ${err.message}`);
+      }
+    });
+  }
 })();
 
-// ── AI copy button ──
+// ── AI prompt copy button ──
 document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
   const text = document.getElementById('ai-prompt-text').textContent;
   navigator.clipboard.writeText(text).then(() => {
@@ -2306,52 +2658,151 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
   drawRain();
 })();
 
-// ── Interactive size playground ──
+// ── Complete Interactive Button Customizer & Code Generator ──
 (function() {
   const slider = document.getElementById('size-slider');
-  const btn = document.getElementById('playground-btn');
+  const sizeValTxt = document.getElementById('size-val-txt');
   const badge = document.getElementById('custom-size-badge');
-  const codeEl = document.getElementById('playground-code');
+  const radiusSelect = document.getElementById('radius-select');
+  const labelInput = document.getElementById('label-input');
+  const sourceInput = document.getElementById('source-input');
+  const srcModeRadios = document.querySelectorAll('input[name="src-mode"]');
   const chkFull = document.getElementById('size-fullwidth-chk');
-  const themeBtns = document.querySelectorAll('.custom-theme-btn');
+  const chkErase = document.getElementById('erase-chk');
+  const themePills = document.querySelectorAll('.theme-pill');
+  const btn = document.getElementById('playground-btn');
+  const codeEl = document.getElementById('playground-code');
+  const copyBtn = document.getElementById('btn-copy-code');
+
   if (!slider || !btn) return;
 
   let currentTheme = 'red';
+  let currentSrcMode = 'manifest';
 
-  function update() {
+  function updateGenerator() {
     const sz = slider.value;
+    const radius = radiusSelect ? radiusSelect.value : '';
+    const label = labelInput ? labelInput.value.trim() || 'Install Firmware' : 'Install Firmware';
+    const sourceVal = sourceInput ? sourceInput.value.trim() : '';
     const isFull = chkFull ? chkFull.checked : false;
+    const isErase = chkErase ? chkErase.checked : false;
+
+    // UI displays
     if (badge) badge.textContent = `size="${sz}"`;
-    btn.setAttribute('size', sz);
+    if (sizeValTxt) sizeValTxt.textContent = `${sz}px`;
+
+    // Apply to live preview button
     btn.setAttribute('theme', currentTheme);
+    btn.setAttribute('size', sz);
+    btn.setAttribute('label', label);
+
+    if (radius) {
+      btn.setAttribute('radius', radius);
+    } else {
+      btn.removeAttribute('radius');
+    }
+
     if (isFull) {
       btn.setAttribute('full-width', '');
     } else {
       btn.removeAttribute('full-width');
     }
-    const fullAttr = isFull ? ' full-width' : '';
+
+    if (isErase) {
+      btn.setAttribute('erase-first', '');
+    } else {
+      btn.removeAttribute('erase-first');
+    }
+
+    if (currentSrcMode === 'github') {
+      btn.removeAttribute('manifest');
+      btn.setAttribute('github', sourceVal || 'skr-electronics-lab/flyradar32');
+    } else {
+      btn.removeAttribute('github');
+      btn.setAttribute('manifest', sourceVal || 'demo-manifest.json');
+    }
+
+    // Build generated code snippet
+    const attrs = [];
+    if (currentSrcMode === 'github') {
+      attrs.push(`  github="${sourceVal || 'owner/repo'}"`);
+    } else {
+      attrs.push(`  manifest="${sourceVal || 'https://yoursite.com/manifest.json'}"`);
+    }
+
+    if (label !== 'Install Firmware') {
+      attrs.push(`  label="${label}"`);
+    }
+    if (currentTheme !== 'red') {
+      attrs.push(`  theme="${currentTheme}"`);
+    }
+    attrs.push(`  size="${sz}"`);
+
+    if (radius) {
+      attrs.push(`  radius="${radius}"`);
+    }
+    if (isFull) {
+      attrs.push(`  full-width`);
+    }
+    if (isErase) {
+      attrs.push(`  erase-first`);
+    }
+
+    const codeSnippet = `&lt;script type="module" src="https://skr-electronics-lab.github.io/esp-flasher-button/esp-flasher-button.js"&gt;&lt;/script&gt;\n\n&lt;esp-flasher-button \n${attrs.join('\n')}&gt;\n&lt;/esp-flasher-button&gt;`;
+
     if (codeEl) {
-      codeEl.textContent = `<esp-flash-button manifest="https://yoursite.com/manifest.json" size="${sz}" theme="${currentTheme}"${fullAttr}></esp-flash-button>`;
+      codeEl.innerHTML = codeSnippet;
     }
   }
 
-  slider.addEventListener('input', update);
-  if (chkFull) chkFull.addEventListener('change', update);
+  slider.addEventListener('input', updateGenerator);
+  if (radiusSelect) radiusSelect.addEventListener('change', updateGenerator);
+  if (labelInput) labelInput.addEventListener('input', updateGenerator);
+  if (sourceInput) sourceInput.addEventListener('input', updateGenerator);
+  if (chkFull) chkFull.addEventListener('change', updateGenerator);
+  if (chkErase) chkErase.addEventListener('change', updateGenerator);
 
-  themeBtns.forEach(tBtn => {
-    tBtn.addEventListener('click', () => {
-      themeBtns.forEach(b => {
-        b.style.background = 'var(--surf2)';
-        b.style.borderColor = 'var(--line)';
-        b.style.color = 'var(--text3)';
-      });
-      tBtn.style.background = 'var(--surf3)';
-      tBtn.style.borderColor = 'var(--red)';
-      tBtn.style.color = 'var(--text)';
-      currentTheme = tBtn.dataset.theme;
-      update();
+  srcModeRadios.forEach(r => {
+    r.addEventListener('change', () => {
+      currentSrcMode = r.value;
+      if (sourceInput) {
+        if (currentSrcMode === 'github') {
+          sourceInput.value = 'skr-electronics-lab/flyradar32';
+          sourceInput.placeholder = 'owner/repo (e.g. espressif/arduino-esp32)';
+        } else {
+          sourceInput.value = 'demo-manifest.json';
+          sourceInput.placeholder = 'https://yoursite.com/manifest.json';
+        }
+      }
+      updateGenerator();
     });
   });
+
+  themePills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      themePills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentTheme = pill.dataset.theme;
+      updateGenerator();
+    });
+  });
+
+  if (copyBtn && codeEl) {
+    copyBtn.addEventListener('click', () => {
+      const rawCode = codeEl.innerText || codeEl.textContent;
+      navigator.clipboard.writeText(rawCode).then(() => {
+        copyBtn.classList.add('copied');
+        copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> <span>Copied!</span>';
+        setTimeout(() => {
+          copyBtn.classList.remove('copied');
+          copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> <span>Copy Code</span>';
+        }, 2500);
+      });
+    });
+  }
+
+  // Initial render
+  updateGenerator();
 })();
 
 // ── Subtle copy protection ──

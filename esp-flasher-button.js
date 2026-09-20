@@ -493,22 +493,6 @@
       style.textContent = SHADOW_CSS;
       shadow.appendChild(style);
 
-      // Check Web Serial support
-      if (!('serial' in navigator)) {
-        const msg = document.createElement('span');
-        msg.className = 'not-supported';
-        msg.innerHTML = `${ICONS.warning} <span>Web Serial not supported — use Chrome or Edge 89+ on desktop</span>`;
-        shadow.appendChild(msg);
-        return;
-      }
-      if (!window.isSecureContext) {
-        const msg = document.createElement('span');
-        msg.className = 'not-supported';
-        msg.innerHTML = `${ICONS.warning} <span>HTTPS is required for Web Serial. Serve over https://</span>`;
-        shadow.appendChild(msg);
-        return;
-      }
-
       // Check if slot content was provided
       const slotEl = this.querySelector('[slot="activate"]');
       if (slotEl) {
@@ -581,7 +565,14 @@
     }
 
     async _onButtonClick() {
-      if (!this._manifestUrl && !this._githubRepo) { alert('ESP Flash Button: no "manifest" or "github" attribute set.'); return; }
+      if (!('serial' in navigator)) {
+        alert('Web Serial is not supported in this browser.\n\nPlease open this page in Google Chrome, Microsoft Edge, Brave, or Opera on desktop (Windows, macOS, Linux). Mobile browsers are not supported.');
+        return;
+      }
+      if (!this._manifestUrl && !this._githubRepo) {
+        alert('ESP Flasher Button: Please set the "manifest" attribute (e.g. manifest="https://yoursite.com/manifest.json").');
+        return;
+      }
       if (this._isFlashing || this._modal) return;
       await this._openModal();
     }
@@ -2418,11 +2409,28 @@
       // 1. If release contains a manifest.json asset, download and use that
       const manifestAsset = assets.find(a => a.name.toLowerCase() === 'manifest.json');
       if (manifestAsset) {
+        this._activeManifestSourceUrl = manifestAsset.browser_download_url;
         const mRes = await fetch(manifestAsset.browser_download_url);
         if (!mRes.ok) throw new Error(`Failed to download manifest.json from release (HTTP ${mRes.status})`);
         const parsed = await mRes.json();
         if (!parsed.version && data.tag_name) parsed.version = data.tag_name;
         if (!parsed.githubRelease) parsed.githubRelease = { repo, tag: data.tag_name, url: data.html_url };
+
+        // Resolve relative part paths against matching release assets
+        if (parsed.builds && Array.isArray(parsed.builds)) {
+          for (const b of parsed.builds) {
+            if (b.parts && Array.isArray(b.parts)) {
+              for (const p of b.parts) {
+                if (p.path && !p.path.startsWith('http')) {
+                  const match = assets.find(a => a.name.toLowerCase() === p.path.toLowerCase() || a.name.toLowerCase().endsWith(p.path.toLowerCase()));
+                  if (match) {
+                    p.path = match.browser_download_url;
+                  }
+                }
+              }
+            }
+          }
+        }
         return parsed;
       }
 
@@ -3148,7 +3156,8 @@
 
       try {
         // Fetch firmware files
-        const manifestBase = this._manifestUrl.substring(0, this._manifestUrl.lastIndexOf('/') + 1);
+        const mSource = this._activeManifestSourceUrl || this._manifestUrl || '';
+        const manifestBase = mSource.includes('/') ? mSource.substring(0, mSource.lastIndexOf('/') + 1) : '';
         const flashFiles = [];
 
         this._log('accent', `→ Flashing ${this._manifest?.name || 'firmware'} [${build.chipFamily}]`);
@@ -3172,6 +3181,9 @@
             flashFiles.push({ data: bufStr(buf), address: offset });
             this._log('success', `  ✓ ${part.path} (${(buf.byteLength / 1024).toFixed(1)} KB) @ 0x${offset.toString(16)}`);
           } catch (e) {
+            if (url.includes('github.com') && url.includes('/releases/download/')) {
+              throw new Error(`Cannot fetch "${part.path}" from GitHub Releases (GitHub release storage blocks browser CORS requests). Host binaries on GitHub Pages or any static server with Access-Control-Allow-Origin: *.`);
+            }
             throw new Error(`Cannot fetch ${part.path}: ${e.message}`);
           }
         }

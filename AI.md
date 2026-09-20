@@ -1,134 +1,225 @@
-You are helping a user integrate, deploy, or troubleshoot **ESP Flasher Button** — an embeddable web component that lets users flash ESP32/ESP8266 firmware directly from the browser using the Web Serial API.
+# AI Integration & Technical Specification: ESP Flasher Button
 
-## What it does
-- Renders a `<esp-flasher-button>` (or `<esp-flash-button>`) custom element on any HTML page
-- Supports direct GitHub Releases flashing via `github="owner/repo"` (auto-discovering latest releases and `.bin` assets)
-- On click, opens a modal that fetches a firmware manifest JSON from a URL or GitHub
-- Lets the user select a firmware build, connect an ESP device via USB serial, and flash it
-- Shows real-time progress with MD5 verification after write
-- Includes a built-in serial monitor for debugging connected devices
-- Includes Improv-Wi-Fi provisioning over USB serial
-- Smart Baud fallback on noisy cable timeouts
+This document provides the authoritative technical reference and system prompt instructions for AI coding assistants (ChatGPT, Claude, Cursor, Copilot, Gemini, Antigravity) integrating or troubleshooting **ESP Flasher Button**.
 
-## Key architecture
-- **Single-file JS component**: `esp-flasher-button.js` / `esp-flash-button.js` (IIFE)
-- **No dependencies** beyond esptool-js (loaded dynamically from unpkg CDN)
-- **Shadow DOM** for the trigger button only; the modal and serial monitor are injected into `document.body`
-- **CSS variables** for theming — dark theme by default, light theme override via `:root[data-theme="light"]`
-- **Hosted** on GitHub Pages at `https://skr-electronics-lab.github.io/esp-flasher-button/`
-- **Flash settings are manifest-driven** — flash mode (`qio`/`dio`/...), frequency, size, baud, erase and compression are resolved per-build from `flashSettings` instead of being hardcoded to QIO fast-flashing
+---
 
-## Attributes
-| Attribute | Default | Description |
-|-----------|---------|-------------|
-| `manifest` | — | URL to firmware manifest JSON (required unless `github` is specified) |
-| `github` | — | GitHub repository (e.g. `"owner/repo"`). Automatically resolves the latest release, downloads `manifest.json` or synthesizes build entries from attached `.bin` files |
-| `label` | "Install Firmware" | Button text |
-| `size` | "14.5" | Button font size & overall scale: any number (e.g. `12`, `14`, `16`, `18`, `20`, `22`, `24`, `28`, `32`) or presets (`sm`, `md`, `lg`, `xl`) |
-| `width` | auto | Explicit button width (e.g. `"240px"`, `"100%"`, `"320"`) |
-| `height` | auto | Explicit button height (e.g. `"44px"`, `"48"`) |
-| `radius` | theme default | Custom corner radius (e.g. `"6"`, `"12"`, `"pill"`, `"0"`) |
-| `full-width` / `block` | off | Stretches button across 100% of parent width |
-| `erase-first` | off | Erase all flash before writing |
-| `baud` | 460800 | Flash baud rate |
+## 🤖 System Prompt for AI Assistants
 
-## Advanced Features
-- **GitHub Releases Auto-Resolution**: Use `<esp-flash-button github="owner/repo">` to automatically query GitHub API, fetch the latest tag/release, and flash binaries without hosting a manual `manifest.json`.
-- **Post-Flash Quick Actions**: 1-click **Open Serial Monitor** (opens Web Serial at 115200 to view boot logs) and **Configure Wi-Fi** (Improv-Wi-Fi protocol over serial).
-- **Smart Baud Auto-Recovery**: If flashing at high speeds (921600 or 460800 baud) fails due to unshielded cables or noise, the flasher provides a 1-click retry button at the safe 115200 speed.
+When helping a user with `esp-flasher-button`, adopt this context:
 
-## Theme reference
-- **red**: Bold filled pill shape, red gradient
-- **dark**: Rectangular with heavy border, dark gradient fill
-- **green**: Rounded with green glow border
-- **light**: Compact blue gradient, lighter font weight
-- **ghost**: Dashed outline, transparent background
-- **minimal**: Small underlined text, no border/fill
+```text
+You are an expert embedded web systems engineer assisting with ESP Flasher Button (by SKR Electronics Lab) — a zero-dependency Web Component for flashing ESP32 and ESP8266 devices directly in the browser via the Web Serial API.
+The component runs client-side with no backend server. Firmware files (.bin) and manifest.json must be served with CORS enabled (Access-Control-Allow-Origin: *).
+Web Serial is supported ONLY on desktop Chromium browsers (Google Chrome 89+, Microsoft Edge 89+, Brave, Opera 76+). Mobile browsers (Android Chrome, iOS Safari) are NOT supported due to mobile OS USB CDC-ACM limitations.
+```
 
-## Manifest JSON format
+---
+
+## 📦 Component Overview
+
+- **Element Tags**: `<esp-flasher-button>` (primary) and `<esp-flash-button>` (backwards-compatible alias)
+- **Script URL**: `https://skr-electronics-lab.github.io/esp-flasher-button/esp-flasher-button.js`
+- **Supported Microcontrollers**:
+  - ESP32 (Original Dual-Core)
+  - ESP32-S2
+  - ESP32-S3
+  - ESP32-C3
+  - ESP32-C6
+  - ESP32-H2
+  - ESP8266 & ESP8285
+- **Engine**: Powered by Espressif's official `esptool-js` (loaded dynamically on first user click).
+- **Security**: 100% in-browser Web Serial connection. Zero server telemetry or data upload.
+
+---
+
+## ⚙️ Attribute Reference
+
+| Attribute | Type | Default | Description |
+|---|---|---|---|
+| `manifest` | `string` | — | Absolute or relative URL to the firmware `manifest.json`. Must allow CORS. |
+| `label` | `string` | `"Install Firmware"` | Text inside the button (ignored if custom `slot="activate"` is used). |
+| `theme` | `string` | `"red"` | Visual theme: `"red"`, `"dark"`, `"green"`, `"light"`, `"ghost"`, `"minimal"`. |
+| `size` | `number \| string` | `"14.5"` | Scale/font size: any numeric value (e.g. `"14"`, `"16"`, `"18"`, `"22"`, `"28"`) or preset (`"sm"`, `"md"`, `"lg"`, `"xl"`). |
+| `width` | `string` | `auto` | Explicit button width (e.g. `"240px"`, `"100%"`). |
+| `height` | `string` | `auto` | Explicit button height (e.g. `"44px"`, `"48px"`). |
+| `radius` | `string` | theme default | Custom corner radius (e.g. `"pill"`, `"12"`, `"6"`, `"0"`). |
+| `full-width` | `boolean` | `false` | Stretches button across 100% of parent container. |
+| `erase-first` | `boolean` | `false` | When present, erases full chip flash before writing. |
+| `baud` | `number` | `460800` | Flashing baud rate (`921600`, `460800`, `230400`, `115200`). |
+
+---
+
+## 🎨 Design Themes
+
+1. **`red`** (Default): High-energy gradient (`#e03030` to `#b81f1f`), rounded pill, glowing red drop-shadow.
+2. **`dark`**: Industrial dark aesthetic (`#1a1a1e`), crisp 2px border, subtle contrast hover.
+3. **`green`**: Hardware success green gradient with soft emerald perimeter ring.
+4. **`light`**: Crisp cobalt blue gradient with sleek compact proportions.
+5. **`ghost`**: Semi-transparent background with dashed accent border.
+6. **`minimal`**: Lightweight text button with subtle underline accent.
+
+---
+
+## 📄 Manifest JSON Schema
+
+The manifest describes firmware binaries, target chip families, and optional SPI flash parameters:
+
 ```json
 {
-  "name": "My Firmware",
-  "description": "Optional description",
+  "name": "My ESP32 Project",
   "version": "1.0.0",
+  "description": "Multi-partition firmware for ESP32",
+  "new_install_prompt_erase": true,
   "flashSettings": {
     "mode": "dio",
     "freq": "40m",
+    "flashSize": "4MB",
     "baud": 460800,
-    "compress": true
+    "compress": true,
+    "erase": false
   },
   "builds": [
     {
-      "chip": "esp32",
-      "flashSize": "4MB",
-      "firmware": "https://example.com/firmware.bin",
-      "address": "0x0"
-    }
-  ]
-}
-```
-
-## Flash settings (manifest-driven, configurable)
-The component no longer hardcodes flash mode. Firmware authors decide exactly how their firmware is written by adding a `flashSettings` object to the manifest root (applies to all builds) and/or to an individual build (overrides the root). Both nested `flashSettings` and flat legacy keys are accepted.
-
-| Key | Values | Default | Purpose |
-|-----|--------|---------|---------|
-| `mode` | `keep`, `qio`, `qout`, `dio`, `dout` | `keep` | SPI flash mode. `qio`/`qout` are the fastest; `dio`/`dout` are needed for some modules/boards with limited wiring or older flash chips. |
-| `freq` | `keep`, `80m`, `40m`, `26m`, `20m` | `keep` | Flash clock frequency. Lower it (e.g. `26m`) if flashing an old / marginal flash chip. |
-| `flashSize` | `detect`, `keep`, `256KB`, `512KB`, `1MB`, `2MB`, `4MB`, `8MB`, `16MB` | `detect` | Override the auto-detected flash size (e.g. force `"1MB"`). |
-| `baud` | positive integer | component `baud` attr (460800) | Serial baud for connect + write. Capped at 115200 for ESP8266/ESP8285 to avoid brownout. |
-| `erase` | `true` / `false` | manifest/attr/default | Force or default the erase toggle in the UI. When omitted, the user keeps control. |
-| `compress` | `true` / `false` | `true` | Hardware compression during transfer. |
-
-Aliases (also accepted, ESP Web Tools style): `flashMode`/`flash_mode`, `flashFreq`/`flash_frequency`, `flashSize`/`flash_size`, `eraseAll`.
-
-Precedence (most specific wins): user UI selection > build.flashSettings > manifest.flashSettings > component attributes (`baud`, `erase-first`) > component defaults.
-
-### Examples
-```json
-{
-  "flashSettings": { "mode": "dio", "freq": "40m" },
-  "builds": [
-    {
-      "chipFamily": "ESP32-S3",
-      "flashSettings": { "mode": "qio", "freq": "80m", "baud": 921600 },
-      "parts": [ { "path": "firmware.bin", "offset": 0 } ]
+      "chipFamily": "ESP32",
+      "parts": [
+        { "path": "bootloader.bin", "offset": 4096 },
+        { "path": "partitions.bin", "offset": 32768 },
+        { "path": "firmware.bin", "offset": 65536 }
+      ]
     },
     {
       "chipFamily": "ESP8266",
-      "flashSettings": { "freq": "26m", "baud": 115200 },
-      "parts": [ { "path": "firmware-8266.bin", "offset": 0 } ]
+      "parts": [
+        { "path": "firmware-8266.bin", "offset": 0 }
+      ]
     }
   ]
 }
 ```
-- A build that does not declare `mode`/`freq` inherits the root values; a build declaring only `mode` keeps the root `freq`.
-- Invalid values silently fall back to the safe default (`mode`→`keep`, `freq`→`keep`, `flashSize`→`detect`).
-- The exact resolved settings are shown to the user as a "Flash settings" strip in the confirm dialog, where users can also switch their preferred baud rate.
-- Multi-variant firmware: If a manifest declares multiple builds, users see an interactive target variant selector grid.
-- Safe Mode Retry: If a flash fails, a one-click "Safe 115.2k Retry" button recovers without manual re-configuration.
 
-## Serial monitor
-- Opens from the success panel after a successful flash or from the confirmation step
-- Shows real-time RX/TX output in a modal overlay with auto-scroll lock
-- Supports baud rate selection (including `74880` for ESP Boot ROM), line timestamps (`TS`), DTR/RTS signals, line ending config
-- Uses the same Web Serial port as the flash session (with clean disconnect/reconnect)
+### TypeScript Definition
+```typescript
+interface FlashSettings {
+  mode?: 'keep' | 'dio' | 'qio' | 'dout' | 'qout';
+  freq?: 'keep' | '40m' | '80m' | '26m' | '20m';
+  flashSize?: 'detect' | '256KB' | '512KB' | '1MB' | '2MB' | '4MB' | '8MB' | '16MB';
+  baud?: number;
+  compress?: boolean;
+  erase?: boolean;
+}
 
-## Deployment (GitHub Pages)
-- Hosted directly from the `main` branch of `https://github.com/skr-electronics-lab/esp-flasher-button`
-- Live site & demo: `https://skr-electronics-lab.github.io/esp-flasher-button/`
-- Component script: `https://skr-electronics-lab.github.io/esp-flasher-button/esp-flasher-button.js`
+interface FirmwarePart {
+  path: string; // Relative to manifest.json or absolute HTTPS URL
+  offset: number; // e.g. 0x0, 0x1000, 0x8000, 0x10000
+}
 
-## Common issues
-1. **Serial monitor shows no CSS / only text**: Ensure the style element's CSS variables are on `:root` or the overlay elements. The `@import` for Google Fonts must be the very first rule in the `<style>` element.
-2. **Cancel button doesn't close**: The `_closeModal()` function must set `_abortFlash = true` and `_isFlashing = false` before cleanup.
-3. **Buttons all look the same**: The shadow DOM CSS (SHADOW_CSS constant) defines per-theme classes (`.btn-red`, `.btn-dark`, etc.). If the `theme` attribute is not being read, check that `observedAttributes` includes `'theme'` and that `_theme` getter correctly calls `getAttribute('theme')`.
-4. **CORS errors loading manifest**: The manifest server must send `Access-Control-Allow-Origin: *` headers.
-5. **Web Serial not detected**: User must use Chrome or Edge 89+ on desktop with HTTPS.
-6. **Firmware flashes but device won't boot**: The bootloader header was written with a flash mode/freq the chip can't run (e.g. QIO on a DIO-only board). Set `flashSettings.mode`/`freq` in the manifest (e.g. `"dio"`, `"40m"`) instead of relying on `keep`.
-7. **Flashing a build that overrides baud**: When a build's `flashSettings.baud` differs from the chip-detection baud, the component auto-reconnects at the new baud before writing. ESP8266/ESP8285 are always capped to 115200.
+interface FirmwareBuild {
+  chipFamily: 'ESP32' | 'ESP32-S2' | 'ESP32-S3' | 'ESP32-C3' | 'ESP32-C6' | 'ESP8266' | 'ESP8285';
+  flashSettings?: FlashSettings;
+  parts: FirmwarePart[];
+}
 
-## Hosting
-- Host `esp-flash-button.js` on any static server or CDN
-- Include with `<script type="module" src="https://your-cdn.com/esp-flash-button.js"></script>`
-- Add `<esp-flash-button manifest="https://your-site.com/manifest.json"></esp-flash-button>` wherever you want the button
+interface FirmwareManifest {
+  name: string;
+  version?: string;
+  description?: string;
+  funding_url?: string;
+  flashSettings?: FlashSettings;
+  builds: FirmwareBuild[];
+}
+```
+
+---
+
+## 📟 Built-In Real Web Serial Monitor
+
+After firmware write finishes, the modal offers an **[⚡ Open Serial Monitor]** button. It connects to the same ESP device using Web Serial:
+- Line-buffered UART streaming with autoscroll.
+- Configurable baud rates: 9600, 19200, 38400, 57600, 74880 (ESP Boot ROM), 115200 (default), 230400, 460800, 921600.
+- Hardware Reset pulse (toggles RTS low for 120ms to reboot the microchip).
+- DTR toggle (controls GPIO0 / BOOT signal).
+- Line ending selector: `CRLF`, `LF`, `CR`, or None.
+- Millisecond timestamps toggle.
+
+---
+
+## 📶 Improv-Wi-Fi Provisioning Protocol
+
+The component includes native support for the open **Improv-Wi-Fi** serial protocol:
+- Transmits RPC frames (`0x01` Send Wi-Fi Settings) directly over the active USB serial connection.
+- Works with firmware containing ESPHome, Tasmota, or the [Improv-WiFi C++ library](https://github.com/improv-wifi/sdk-cpp).
+- Prompts for SSID & password, transmits credentials, and displays the obtained local IP address.
+
+---
+
+## 📡 Custom DOM Events
+
+You can listen for lifecycle events emitted by the element:
+
+```javascript
+const flasher = document.querySelector('esp-flasher-button');
+
+flasher.addEventListener('flash-success', (e) => {
+  console.log('Flash completed successfully:', e.detail);
+  // e.detail: { chip: 'ESP32-S3', flashSize: '8MB', duration: '14.2s', filesCount: 3 }
+});
+
+flasher.addEventListener('flash-error', (e) => {
+  console.error('Flash error:', e.detail);
+  // e.detail: { title: 'Flash Failed', message: '...' }
+});
+```
+
+---
+
+## 🌐 Browser Compatibility Matrix
+
+| Environment | Status | Reason |
+|---|:---:|---|
+| **Desktop Chrome / Edge / Brave / Opera** | ✅ **Supported** | Native Web Serial API implementation |
+| **Android Chrome** | ❌ **Not Supported** | Android OS does not enumerate USB CDC serial ports in browser |
+| **iOS / iPadOS Safari** | ❌ **Not Supported** | Apple WebKit policy strictly disables Web Serial |
+| **Mozilla Firefox** | ❌ **Not Supported** | Mozilla has not implemented the Web Serial API standard |
+| **Desktop Safari** | ❌ **Not Supported** | WebKit lacks Web Serial support |
+
+---
+
+## 🛠️ Common Integration Pitfalls & Solutions
+
+1. **CORS Error on Firmware `.bin` or `manifest.json`**:
+   - *Issue*: `TypeError: Failed to fetch` or CORS block.
+   - *Fix*: The web server hosting firmware files MUST include the header `Access-Control-Allow-Origin: *`. Hosting firmware on **GitHub Pages** handles this automatically.
+2. **Local `file:///` Context**:
+   - *Issue*: Browser blocks Web Serial on raw local `file:///` paths.
+   - *Fix*: Serve local files over `http://localhost:8080` (e.g. `python -m http.server 8080` or `npx serve`).
+3. **Flashing Succeeds but Board Does Not Boot**:
+   - *Issue*: Bootloader flashed with wrong SPI flash mode or clock frequency.
+   - *Fix*: Set `flashSettings: { "mode": "dio", "freq": "40m" }` in `manifest.json` instead of relying on `"keep"`.
+
+---
+
+## 💻 Complete HTML Implementation Example
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firmware Installer</title>
+  <script type="module" src="https://skr-electronics-lab.github.io/esp-flasher-button/esp-flasher-button.js"></script>
+</head>
+<body style="display:flex; justify-content:center; align-items:center; min-height:100vh; background:#0e0e12; margin:0;">
+
+  <!-- Standard Embeddable Button -->
+  <esp-flasher-button 
+    manifest="https://skr-electronics-lab.github.io/esp-flasher-button/demo-manifest.json" 
+    label="Install Firmware" 
+    theme="red" 
+    size="18">
+  </esp-flasher-button>
+
+</body>
+</html>
+```
