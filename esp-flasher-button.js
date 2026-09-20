@@ -2409,36 +2409,63 @@
       }
       const data = await res.json();
       const assets = data.assets || [];
+      const tag = data.tag_name || 'latest';
 
-      // 1. If release contains a manifest.json asset, download and use that
+      const getCdnBinUrl = (fileName) => `https://cdn.jsdelivr.net/gh/${repo}@${tag}/firmware/${fileName}`;
+      const resolveAssetUrl = (asset) => getCdnBinUrl(asset.name || asset);
+
+      // 1. Try fetching manifest.json via CORS-enabled CDN (jsDelivr / raw GitHub)
+      const manifestCandidates = [
+        `https://cdn.jsdelivr.net/gh/${repo}@${tag}/firmware/manifest.json`,
+        `https://cdn.jsdelivr.net/gh/${repo}@${tag}/manifest.json`,
+        `https://cdn.jsdelivr.net/gh/${repo}@latest/firmware/manifest.json`,
+        `https://cdn.jsdelivr.net/gh/${repo}@latest/manifest.json`,
+        `https://raw.githubusercontent.com/${repo}/${tag}/firmware/manifest.json`,
+        `https://raw.githubusercontent.com/${repo}/${tag}/manifest.json`
+      ];
+
+      for (const mUrl of manifestCandidates) {
+        try {
+          const mRes = await fetch(mUrl);
+          if (mRes.ok) {
+            const parsed = await mRes.json();
+            this._activeManifestSourceUrl = mUrl;
+            if (!parsed.version && data.tag_name) parsed.version = data.tag_name;
+            if (!parsed.githubRelease) parsed.githubRelease = { repo, tag: data.tag_name, url: data.html_url };
+            return parsed;
+          }
+        } catch (_) {}
+      }
+
+      // 2. If release contains a manifest.json asset, download and use that
       const manifestAsset = assets.find(a => a.name.toLowerCase() === 'manifest.json');
       if (manifestAsset) {
         this._activeManifestSourceUrl = manifestAsset.browser_download_url;
-        const mRes = await fetch(manifestAsset.browser_download_url);
-        if (!mRes.ok) throw new Error(`Failed to download manifest.json from release (HTTP ${mRes.status})`);
-        const parsed = await mRes.json();
-        if (!parsed.version && data.tag_name) parsed.version = data.tag_name;
-        if (!parsed.githubRelease) parsed.githubRelease = { repo, tag: data.tag_name, url: data.html_url };
+        try {
+          const mRes = await fetch(manifestAsset.browser_download_url);
+          if (mRes.ok) {
+            const parsed = await mRes.json();
+            if (!parsed.version && data.tag_name) parsed.version = data.tag_name;
+            if (!parsed.githubRelease) parsed.githubRelease = { repo, tag: data.tag_name, url: data.html_url };
 
-        // Resolve relative part paths against matching release assets
-        if (parsed.builds && Array.isArray(parsed.builds)) {
-          for (const b of parsed.builds) {
-            if (b.parts && Array.isArray(b.parts)) {
-              for (const p of b.parts) {
-                if (p.path && !p.path.startsWith('http')) {
-                  const match = assets.find(a => a.name.toLowerCase() === p.path.toLowerCase() || a.name.toLowerCase().endsWith(p.path.toLowerCase()));
-                  if (match) {
-                    p.path = match.browser_download_url;
+            // Resolve relative part paths against matching release assets
+            if (parsed.builds && Array.isArray(parsed.builds)) {
+              for (const b of parsed.builds) {
+                if (b.parts && Array.isArray(b.parts)) {
+                  for (const p of b.parts) {
+                    if (p.path && !p.path.startsWith('http')) {
+                      p.path = getCdnBinUrl(p.path);
+                    }
                   }
                 }
               }
             }
+            return parsed;
           }
-        }
-        return parsed;
+        } catch (_) {}
       }
 
-      // 2. Otherwise, synthesize manifest from .bin assets in the release
+      // 3. Otherwise, synthesize manifest from .bin assets in the release
       const binAssets = assets.filter(a => a.name.toLowerCase().endsWith('.bin'));
       if (!binAssets.length) {
         throw new Error(`Latest release ${data.tag_name || ''} has no .bin assets or manifest.json attached.`);
@@ -2469,7 +2496,7 @@
             builds.push({
               chip: cp.chip,
               name: `${data.name || repo.split('/')[1]} (${cp.label})`,
-              parts: [{ path: factory.browser_download_url, offset: 0x0 }]
+              parts: [{ path: resolveAssetUrl(factory), offset: 0x0 }]
             });
           } else {
             const boot = chipBins.find(a => isBootloader(a.name));
@@ -2479,10 +2506,10 @@
 
             const parts = [];
             const isC3orS3 = cp.chip === 'esp32c3' || cp.chip === 'esp32s3' || cp.chip === 'esp32c6';
-            if (boot) parts.push({ path: boot.browser_download_url, offset: isC3orS3 ? 0x0 : 0x1000 });
-            if (part) parts.push({ path: part.browser_download_url, offset: 0x8000 });
-            if (app) parts.push({ path: app.browser_download_url, offset: 0x10000 });
-            if (fs) parts.push({ path: fs.browser_download_url, offset: 0x290000 });
+            if (boot) parts.push({ path: resolveAssetUrl(boot), offset: isC3orS3 ? 0x0 : 0x1000 });
+            if (part) parts.push({ path: resolveAssetUrl(part), offset: 0x8000 });
+            if (app) parts.push({ path: resolveAssetUrl(app), offset: 0x10000 });
+            if (fs) parts.push({ path: resolveAssetUrl(fs), offset: 0x290000 });
 
             if (parts.length > 0) {
               builds.push({
@@ -2496,7 +2523,7 @@
               builds.push({
                 chip: cp.chip,
                 name: `${data.name || repo.split('/')[1]} (${cp.label})`,
-                parts: [{ path: single.browser_download_url, offset }]
+                parts: [{ path: resolveAssetUrl(single), offset }]
               });
             }
           }
@@ -2509,7 +2536,7 @@
           builds.push({
             chip: 'esp32',
             name: `${data.name || repo.split('/')[1]} (ESP32)`,
-            parts: [{ path: factory.browser_download_url, offset: 0x0 }]
+            parts: [{ path: resolveAssetUrl(factory), offset: 0x0 }]
           });
         } else {
           const boot = binAssets.find(a => isBootloader(a.name));
@@ -2519,17 +2546,17 @@
 
           if (boot || part || app) {
             const parts = [];
-            if (boot) parts.push({ path: boot.browser_download_url, offset: 0x1000 });
-            if (part) parts.push({ path: part.browser_download_url, offset: 0x8000 });
-            if (app) parts.push({ path: app.browser_download_url, offset: 0x10000 });
-            if (fs) parts.push({ path: fs.browser_download_url, offset: 0x290000 });
+            if (boot) parts.push({ path: resolveAssetUrl(boot), offset: 0x1000 });
+            if (part) parts.push({ path: resolveAssetUrl(part), offset: 0x8000 });
+            if (app) parts.push({ path: resolveAssetUrl(app), offset: 0x10000 });
+            if (fs) parts.push({ path: resolveAssetUrl(fs), offset: 0x290000 });
             builds.push({ chip: 'esp32', name: data.name || repo.split('/')[1], parts });
           } else {
             binAssets.forEach(bin => {
               builds.push({
                 chip: 'esp32',
                 name: bin.name.replace(/\.bin$/i, ''),
-                parts: [{ path: bin.browser_download_url, offset: 0x0 }]
+                parts: [{ path: resolveAssetUrl(bin), offset: 0x0 }]
               });
             });
           }
@@ -3175,18 +3202,48 @@
           const offset = typeof rawOffset === 'string'
             ? (rawOffset.startsWith('0x') || rawOffset.startsWith('0X') ? parseInt(rawOffset, 16) : parseInt(rawOffset, 10))
             : (rawOffset || 0);
-          const url  = part.path.startsWith('http') ? part.path : manifestBase + part.path;
-          this._log('info', `  Fetching ${part.path}...`);
-          this._setProgress(null, `Fetching ${part.path} (${i+1}/${build.parts.length})…`);
+          let url = part.path.startsWith('http') ? part.path : manifestBase + part.path;
+          this._log('info', `  Fetching ${part.path.split('/').pop()}...`);
+          this._setProgress(null, `Fetching ${part.path.split('/').pop()} (${i+1}/${build.parts.length})…`);
           try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            let res = null;
+            try {
+              res = await fetch(url);
+            } catch (_) {}
+
+            // If fetch failed or returned error, and URL is a GitHub release download URL, try CORS-friendly CDN mirrors
+            if ((!res || !res.ok) && url.includes('github.com') && url.includes('/releases/download/')) {
+              const m = url.match(/github\.com\/([^/]+)\/([^/]+)\/releases\/download\/([^/]+)\/(.+)$/);
+              if (m) {
+                const [, owner, repoName, rTag, fileName] = m;
+                const mirrors = [
+                  `https://cdn.jsdelivr.net/gh/${owner}/${repoName}@${rTag}/firmware/${fileName}`,
+                  `https://cdn.jsdelivr.net/gh/${owner}/${repoName}@${rTag}/${fileName}`,
+                  `https://cdn.jsdelivr.net/gh/${owner}/${repoName}@latest/firmware/${fileName}`,
+                  `https://cdn.jsdelivr.net/gh/${owner}/${repoName}@latest/${fileName}`,
+                  `https://raw.githubusercontent.com/${owner}/${repoName}/${rTag}/firmware/${fileName}`,
+                  `https://raw.githubusercontent.com/${owner}/${repoName}/${rTag}/${fileName}`
+                ];
+                for (const mirror of mirrors) {
+                  try {
+                    const mRes = await fetch(mirror);
+                    if (mRes.ok) {
+                      res = mRes;
+                      url = mirror;
+                      break;
+                    }
+                  } catch (_) {}
+                }
+              }
+            }
+
+            if (!res || !res.ok) throw new Error(`HTTP ${res ? res.status : 'ERR_NETWORK_OR_CORS'}`);
             const buf = await res.arrayBuffer();
             flashFiles.push({ data: bufStr(buf), address: offset });
-            this._log('success', `  ✓ ${part.path} (${(buf.byteLength / 1024).toFixed(1)} KB) @ 0x${offset.toString(16)}`);
+            this._log('success', `  ✓ ${part.path.split('/').pop()} (${(buf.byteLength / 1024).toFixed(1)} KB) @ 0x${offset.toString(16)}`);
           } catch (e) {
             if (url.includes('github.com') && url.includes('/releases/download/')) {
-              throw new Error(`Cannot fetch "${part.path}" from GitHub Releases (GitHub release storage blocks browser CORS requests). Host binaries on GitHub Pages or any static server with Access-Control-Allow-Origin: *.`);
+              throw new Error(`Cannot fetch "${part.path}" from GitHub Releases (GitHub release storage blocks browser CORS requests). Please ensure binaries are committed to the repo or hosted with CORS enabled.`);
             }
             throw new Error(`Cannot fetch ${part.path}: ${e.message}`);
           }
