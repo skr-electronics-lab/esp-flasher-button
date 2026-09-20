@@ -167,14 +167,120 @@ Users can open the built-in serial monitor from the terminal button `>_` in the 
 
 ---
 
-## Improv-Wi-Fi Provisioning Protocol
+## 📶 Wi-Fi Provisioning (Improv Serial Protocol)
 
-`ESP Flasher Button` includes native support for the open **Improv-Wi-Fi** serial protocol:
+`ESP Flasher Button` includes built-in support for the open **Improv-Wi-Fi Serial Standard**. Right after flashing completes, users can configure their Wi-Fi credentials in the exact same browser tab over the active Web Serial connection — zero captive portals, zero Wi-Fi AP switching, and no mobile apps required.
 
-1. When flashing finishes, users click **Configure Wi-Fi**.
-2. An inline card prompts for network SSID and Password.
-3. The component transmits standard Improv RPC frames (`0x01` Send Wi-Fi Settings) over the active Web Serial connection.
-4. If your ESP32 firmware supports Improv (e.g. ESPHome, or using the [Improv-WiFi SDK](https://github.com/improv-wifi/sdk-cpp)), it connects and sends back its local IP address.
+### How It Works
+
+```
+[ Browser: esp-flasher-button ]
+       │
+       │ 1. Flashes firmware @ up to 921600 baud
+       ▼
+[ ESP Device Flashed & Verified ]
+       │
+       │ 2. User clicks "Configure Wi-Fi" (port switches to 115200 baud)
+       │ 3. Browser transmits Improv Serial RPC packet (SSID + Password)
+       ▼
+[ ESP Connects to Local Router ]
+       │
+       │ 4. ESP sends back state: 0x04 (Provisioned) + Local IP address
+       ▼
+[ Browser displays: "✓ Connected! IP: 192.168.1.xxx" ]
+```
+
+### 1. Arduino IDE / PlatformIO Implementation
+
+Install the library:
+- **Arduino Library Manager:** Search for `Improv WiFi Library` (by jason2866).
+- **PlatformIO (`platformio.ini`):** `lib_deps = jason2866/Improv WiFi Library@^0.0.2`
+
+```cpp
+#include <WiFi.h>
+#include <ImprovWiFiLibrary.h>
+
+ImprovWiFi improvSerial(&Serial);
+
+void onImprovWiFiConnected(const char *ssid, const char *password) {
+  Serial.println("\n✓ Connected to Wi-Fi successfully via Improv Serial!");
+  Serial.print("Device IP: ");
+  Serial.println(WiFi.localIP());
+}
+
+void onImprovWiFiError(ImprovTypes::Error error) {
+  Serial.print("Improv Wi-Fi Error code: ");
+  Serial.println((int)error);
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(500);
+
+  // Set device metadata reported back to the browser
+  improvSerial.setDeviceInfo(
+    ImprovTypes::ChipFamily::CF_ESP32,
+    "My IoT Device",
+    "1.0.0",
+    "SKR Electronics Lab"
+  );
+  improvSerial.onImprovWiFiConnected(onImprovWiFiConnected);
+  improvSerial.onImprovWiFiError(onImprovWiFiError);
+
+  Serial.println("System initialized. Waiting for Improv Wi-Fi provisioning from browser...");
+}
+
+void loop() {
+  // Process incoming Improv serial RPC frames from esp-flasher-button
+  improvSerial.handleSerial();
+
+  // Your main project code runs here...
+}
+```
+
+### 2. ESPHome Implementation
+
+In ESPHome, adding Improv Wi-Fi Serial support requires just ONE component:
+
+```yaml
+esphome:
+  name: my-esp32-node
+  friendly_name: "My ESP32 Node"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+# 1. Enable Improv Serial over USB UART
+improv_serial:
+
+# 2. Wi-Fi component (no hardcoded credentials required!)
+wifi:
+  ap:
+    ssid: "ESP-Fallback-Hotspot"
+
+api:
+ota:
+  platform: esphome
+```
+
+### 3. Improv Serial Protocol Frame Specification
+
+The browser transmits standard Improv binary frames directly over UART at 115200 baud:
+
+| Byte Offset | Field | Value / Description |
+|:---|:---|:---|
+| `0x00 - 0x05` | Magic Header | ASCII `"IMPROV"` (`0x49 0x4D 0x50 0x52 0x4F 0x56`) |
+| `0x06` | Protocol Version | `0x01` |
+| `0x07` | Packet Type | `0x03` (RPC Command) |
+| `0x08` | Payload Length | Total length of following payload bytes |
+| `0x09` | Command | `0x01` (Send Wi-Fi Settings) |
+| `0x0A` | SSID Length | Length of SSID string in bytes |
+| `0x0B ...` | SSID Bytes | UTF-8 encoded SSID |
+| `...` | Password Length | Length of Password string in bytes |
+| `...` | Password Bytes | UTF-8 encoded Password |
+| `Last Byte` | Checksum | Sum of all preceding bytes modulo 256 (`& 0xFF`) |
 
 ---
 

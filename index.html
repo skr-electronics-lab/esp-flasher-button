@@ -1191,8 +1191,52 @@ code.inline {
 .ws-note svg { width: 16px; height: 16px; color: var(--amber); flex-shrink: 0; margin-top: 2px; }
 
 /* ────────────────────────────────────────────
-   COMPARISON TABLE
+   WI-FI PROVISIONING SECTION
 ──────────────────────────────────────────── */
+.wifi-steps-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px;
+}
+.wifi-step-card {
+  background: var(--surf); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 22px;
+  display: flex; flex-direction: column; gap: 10px; position: relative;
+  transition: all .2s; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+}
+.wifi-step-card:hover { border-color: rgba(34, 211, 238, 0.4); transform: translateY(-2px); }
+.wifi-step-num {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: #22d3ee; background: rgba(34, 211, 238, 0.1);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  padding: 3px 8px; border-radius: 6px; width: fit-content; letter-spacing: .08em;
+}
+.wifi-step-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.wifi-step-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+.wifi-tabs-box {
+  background: rgba(12, 12, 16, 0.94); border: 1px solid var(--line2);
+  border-radius: var(--radius); overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.wifi-tabs-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; border-bottom: 1px solid var(--line);
+  background: var(--surf); flex-wrap: wrap; gap: 10px;
+}
+.wifi-tab-btns { display: flex; gap: 6px; }
+.wifi-tab-btn {
+  padding: 7px 14px; border-radius: 7px; border: 1px solid transparent;
+  background: transparent; color: var(--text3);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: var(--sans); transition: all .15s;
+}
+.wifi-tab-btn:hover { color: var(--text); background: var(--surf2); }
+.wifi-tab-btn.active {
+  background: var(--surf2); border-color: var(--line2); color: var(--text);
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+.wifi-code-panel { display: none; }
+.wifi-code-panel.active { display: block; }
 .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .cmp-card {
   background: var(--surf); border: 1px solid var(--line);
@@ -1404,6 +1448,7 @@ td code { font-family: var(--mono); font-size: 11px; background: var(--surf2); p
     <a class="nav-a" href="#usage">Usage</a>
     <a class="nav-a" href="#features">Features</a>
     <a class="nav-a" href="#serial-monitor">Serial Monitor</a>
+    <a class="nav-a" href="#wifi">Wi-Fi Setup</a>
     <a class="nav-a" href="#compare">Compare</a>
     <a class="nav-a" href="#faq">FAQ</a>
     <a class="nav-gh" href="https://github.com/skr-electronics-lab/esp-flasher-button" target="_blank" rel="noopener">
@@ -2380,6 +2425,146 @@ document.querySelector(<span class="c-str">'esp-flash-button'</span>)
     <div class="ws-note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <div><strong>Real Web Serial Terminal:</strong> This is a 100% functional serial console communicating directly with your microchip via native Web Serial. Supported on Google Chrome, Microsoft Edge, Brave, and Opera on desktop. Android Chrome and iOS Safari are not supported due to mobile USB CDC restrictions.</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── WI-FI PROVISIONING SECTION ── -->
+<section class="section rev" id="wifi">
+  <div class="section-head">
+    <div class="tag">Post-Flash Provisioning</div>
+    <h2 class="section-h">One-Click Wi-Fi Setup over Web Serial</h2>
+    <p class="section-sub">Zero captive portals, zero Wi-Fi AP switching, zero mobile apps. Right after flashing finishes, users configure Wi-Fi credentials in the same browser window via the open Improv Serial protocol.</p>
+  </div>
+
+  <!-- 3 Steps Grid -->
+  <div class="wifi-steps-grid rev">
+    <div class="wifi-step-card">
+      <span class="wifi-step-num">STEP 01</span>
+      <div class="wifi-step-title">Flash Over Web Serial</div>
+      <div class="wifi-step-desc">The user clicks your embedded button, picks their USB COM port, and the flash engine programs the ESP device at up to 921600 baud.</div>
+    </div>
+    <div class="wifi-step-card">
+      <span class="wifi-step-num">STEP 02</span>
+      <div class="wifi-step-title">Click "Configure Wi-Fi"</div>
+      <div class="wifi-step-desc">On the success dialog, the user clicks "Configure Wi-Fi". The active Web Serial port stays connected and switches to 115200 baud.</div>
+    </div>
+    <div class="wifi-step-card">
+      <span class="wifi-step-num">STEP 03</span>
+      <div class="wifi-step-title">Enter SSID &amp; Password</div>
+      <div class="wifi-step-desc">Credentials are sent via standard Improv RPC frames directly into the ESP's UART. The device connects and confirms its local IP address!</div>
+    </div>
+  </div>
+
+  <!-- Code Tabs Box -->
+  <div class="wifi-tabs-box rev">
+    <div class="wifi-tabs-bar">
+      <div class="wifi-tab-btns">
+        <button class="wifi-tab-btn active" data-wtab="arduino">Arduino IDE / PlatformIO</button>
+        <button class="wifi-tab-btn" data-wtab="esphome">ESPHome (YAML)</button>
+        <button class="wifi-tab-btn" data-wtab="improv-spec">Improv Protocol Spec</button>
+      </div>
+      <button class="btn-copy-code" id="wifi-copy-btn" title="Copy code snippet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy Snippet</span>
+      </button>
+    </div>
+
+    <!-- Panel 1: Arduino -->
+    <div class="wifi-code-panel active" id="wtab-arduino">
+      <pre class="code-generator-pre"><code>// 1. Install "Improv_WiFi_Library" from Arduino IDE Library Manager or PlatformIO:
+//    PlatformIO: lib_deps = jason2866/Improv WiFi Library@^0.0.2
+
+#include &lt;WiFi.h&gt;
+#include &lt;ImprovWiFiLibrary.h&gt;
+
+ImprovWiFi improvSerial(&amp;Serial);
+
+void onImprovWiFiConnected(const char *ssid, const char *password) {
+  Serial.println("\n✓ Connected to Wi-Fi successfully via Improv Serial!");
+  Serial.print("Device IP: ");
+  Serial.println(WiFi.localIP());
+}
+
+void onImprovWiFiError(ImprovTypes::Error error) {
+  Serial.print("Improv Wi-Fi Error code: ");
+  Serial.println((int)error);
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(500);
+
+  // Set your project metadata (reported back to the browser)
+  improvSerial.setDeviceInfo(
+    ImprovTypes::ChipFamily::CF_ESP32,
+    "My ESP Device",
+    "v1.0.0",
+    "SKR Electronics Lab"
+  );
+  improvSerial.onImprovWiFiConnected(onImprovWiFiConnected);
+  improvSerial.onImprovWiFiError(onImprovWiFiError);
+
+  Serial.println("System ready. Waiting for Improv Wi-Fi provisioning from browser...");
+}
+
+void loop() {
+  // Process incoming Improv serial RPC packets from esp-flasher-button
+  improvSerial.handleSerial();
+
+  // Your main project logic continues here...
+}</code></pre>
+    </div>
+
+    <!-- Panel 2: ESPHome -->
+    <div class="wifi-code-panel" id="wtab-esphome">
+      <pre class="code-generator-pre"><code># In ESPHome, adding Improv Wi-Fi Serial support requires just ONE component:
+
+esphome:
+  name: my-esp32-node
+  friendly_name: "My ESP32 Node"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+# 1. Enable Improv Serial provisioning
+improv_serial:
+
+# 2. Wi-Fi component (no hardcoded credentials required)
+wifi:
+  # Users configure SSID &amp; Password directly via esp-flasher-button
+  ap:
+    ssid: "ESP-Fallback-AP"
+
+# 3. Native API for Home Assistant / Web UI
+api:
+ota:
+  platform: esphome</code></pre>
+    </div>
+
+    <!-- Panel 3: Improv Protocol Spec -->
+    <div class="wifi-code-panel" id="wtab-improv-spec">
+      <pre class="code-generator-pre"><code>// Improv Serial Protocol Frame Structure:
+// Transmitted by esp-flasher-button directly over UART @ 115200 baud
+//
+// 1. Magic Header:   "IMPROV" (0x49, 0x4D, 0x50, 0x52, 0x4F, 0x56)
+// 2. Protocol Ver:   0x01
+// 3. Packet Type:    0x03 (RPC Command)
+// 4. Payload Length: Total length of payload bytes
+// 5. Payload Data:
+//      [0x01]        Command: Send Wi-Fi settings
+//      [ssid_len]    1 byte length of SSID string
+//      [...ssid]     SSID UTF-8 characters
+//      [pass_len]    1 byte length of Password string
+//      [...pass]     Password UTF-8 characters
+// 6. Checksum:       Sum of all preceding bytes modulo 256 (0xFF)
+//
+// Device State Responses:
+// 0x01: Authorization required | 0x02: Authorized | 0x03: Provisioning | 0x04: Provisioned</code></pre>
     </div>
   </div>
 </section>
@@ -3562,6 +3747,38 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
   }
 
   setTimeout(tick, 2200);
+})();
+
+// ── Wi-Fi Provisioning Tabs ──
+(function() {
+  const wtabBtns = document.querySelectorAll('.wifi-tab-btn');
+  const wtabPanels = document.querySelectorAll('.wifi-code-panel');
+  const wcopyBtn = document.getElementById('wifi-copy-btn');
+
+  wtabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      wtabBtns.forEach(b => b.classList.remove('active'));
+      wtabPanels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const targetPanel = document.getElementById(`wtab-${btn.dataset.wtab}`);
+      if (targetPanel) targetPanel.classList.add('active');
+    });
+  });
+
+  if (wcopyBtn) {
+    wcopyBtn.addEventListener('click', () => {
+      const activePanel = document.querySelector('.wifi-code-panel.active code');
+      if (!activePanel) return;
+      navigator.clipboard.writeText(activePanel.innerText || activePanel.textContent).then(() => {
+        wcopyBtn.classList.add('copied');
+        wcopyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> <span>Copied!</span>';
+        setTimeout(() => {
+          wcopyBtn.classList.remove('copied');
+          wcopyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> <span>Copy Snippet</span>';
+        }, 2200);
+      });
+    });
+  }
 })();
 
 // ── Subtle copy protection ──

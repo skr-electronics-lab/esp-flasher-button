@@ -1905,24 +1905,116 @@
         }
         .__efb-succ-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
         .__efb-succ-btn-serial {
-          background: linear-gradient(135deg, rgba(139, 92, 246, 0.9), rgba(109, 40, 217, 0.95));
-          color: #fff;
-          box-shadow: 0 2px 10px rgba(139, 92, 246, 0.25);
+          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+          color: #ffffff;
+          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.28);
+          border: 1px solid rgba(255, 255, 255, 0.12);
         }
         .__efb-succ-btn-serial:hover {
-          background: linear-gradient(135deg, #9061f9, #7c3aed);
+          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
           transform: translateY(-1px);
-          box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+          box-shadow: 0 4px 14px rgba(37, 99, 235, 0.42);
         }
         .__efb-succ-btn-wifi {
-          background: var(--efb-surface2);
-          border: 1px solid var(--efb-border2);
-          color: var(--efb-text);
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          color: #f1f5f9;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         .__efb-succ-btn-wifi:hover {
-          border-color: var(--efb-accent);
-          color: var(--efb-accent);
+          background: rgba(34, 211, 238, 0.1);
+          border-color: #22d3ee;
+          color: #22d3ee;
           transform: translateY(-1px);
+          box-shadow: 0 4px 14px rgba(34, 211, 238, 0.2);
+        }
+
+        /* ── Light Mode Button & Wi-Fi Provisioning Overrides ── */
+        [data-theme="light"] .__efb-succ-btn-serial {
+          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+          color: #ffffff;
+          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+          border: none;
+        }
+        [data-theme="light"] .__efb-succ-btn-serial:hover {
+          background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+        }
+        [data-theme="light"] .__efb-succ-btn-wifi {
+          background: #ffffff;
+          border: 1.5px solid #cbd5e1;
+          color: #0f172a;
+          font-weight: 600;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        [data-theme="light"] .__efb-succ-btn-wifi:hover {
+          background: #eff6ff;
+          border-color: #2563eb;
+          color: #1d4ed8;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 14px rgba(37, 99, 235, 0.18);
+        }
+        [data-theme="light"] .__efb-wifi-card {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        }
+        [data-theme="light"] .__efb-wifi-icon {
+          background: #e0f2fe;
+          border: 1px solid #bae6fd;
+          color: #0284c7;
+        }
+        [data-theme="light"] .__efb-wifi-title {
+          color: #0f172a;
+        }
+        [data-theme="light"] .__efb-wifi-sub {
+          color: #64748b;
+        }
+        [data-theme="light"] .__efb-wifi-label {
+          color: #475569;
+        }
+        [data-theme="light"] .__efb-wifi-input {
+          background: #ffffff;
+          border: 1.5px solid #cbd5e1;
+          color: #0f172a;
+        }
+        [data-theme="light"] .__efb-wifi-input:focus {
+          border-color: #2563eb;
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+        [data-theme="light"] .__efb-wifi-status.info {
+          background: #eff6ff;
+          border: 1px solid #bfdbfe;
+          color: #1d4ed8;
+        }
+        [data-theme="light"] .__efb-wifi-status.ok {
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          color: #15803d;
+        }
+        [data-theme="light"] .__efb-wifi-status.err {
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+          color: #b91c1c;
+        }
+        [data-theme="light"] #__efb-wifi-back {
+          background: #f1f5f9;
+          border: 1px solid #cbd5e1;
+          color: #475569;
+        }
+        [data-theme="light"] #__efb-wifi-back:hover {
+          background: #e2e8f0;
+          color: #0f172a;
+        }
+        [data-theme="light"] #__efb-wifi-send {
+          background: linear-gradient(135deg, #2563eb, #1d4ed8);
+          color: #ffffff;
+          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+        }
+        [data-theme="light"] #__efb-wifi-send:hover {
+          background: linear-gradient(135deg, #1d4ed8, #1e40af);
+          box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
         }
 
         /* ── Improv Wi-Fi Provisioning Card ── */

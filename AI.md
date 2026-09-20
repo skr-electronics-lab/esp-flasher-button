@@ -147,9 +147,40 @@ After firmware write finishes, the modal offers an **[⚡ Open Serial Monitor]**
 ## 📶 Improv-Wi-Fi Provisioning Protocol
 
 The component includes native support for the open **Improv-Wi-Fi** serial protocol:
-- Transmits RPC frames (`0x01` Send Wi-Fi Settings) directly over the active USB serial connection.
-- Works with firmware containing ESPHome, Tasmota, or the [Improv-WiFi C++ library](https://github.com/improv-wifi/sdk-cpp).
-- Prompts for SSID & password, transmits credentials, and displays the obtained local IP address.
+- **Zero Captive Portals:** Prompts for SSID & password directly inside the browser immediately after flashing.
+- **Direct UART Communication:** Formats and writes binary RPC frames (`0x01` Send Wi-Fi Settings) over the active Web Serial connection at 115200 baud.
+- **Two-Way Status:** Reads verification packets from the ESP chip (`0x04` Provisioned) and displays the acquired local IP address.
+
+### Firmware Setup
+
+#### Arduino IDE / PlatformIO (C++)
+```cpp
+#include <WiFi.h>
+#include <ImprovWiFiLibrary.h> // install "Improv WiFi Library"
+
+ImprovWiFi improvSerial(&Serial);
+
+void setup() {
+  Serial.begin(115200);
+  improvSerial.setDeviceInfo(ImprovTypes::ChipFamily::CF_ESP32, "MyDevice", "1.0", "Author");
+  improvSerial.onImprovWiFiConnected([](const char *ssid, const char *pass) {
+    Serial.printf("\nConnected! IP: %s\n", WiFi.localIP().toString().c_str());
+  });
+}
+
+void loop() {
+  improvSerial.handleSerial(); // handles incoming RPC from browser
+}
+```
+
+#### ESPHome (YAML)
+```yaml
+improv_serial:
+
+wifi:
+  ap:
+    ssid: "Fallback-Hotspot"
+```
 
 ---
 
