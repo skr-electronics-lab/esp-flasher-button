@@ -3625,7 +3625,6 @@
         `;
 
         successEl.querySelector('#__efb-succ-open-monitor')?.addEventListener('click', async () => {
-          await this._closeModal();
           await this._openSerialMonitor(115200);
         });
 
@@ -3781,7 +3780,7 @@
     }
 
     // ── Serial Monitor ───────────────────────────────────────────
-    async _openSerialMonitor() {
+    async _openSerialMonitor(baud = 115200) {
       if (this._serialMonitorOpen) return;
       if (!this._port) {
         if (!('serial' in navigator)) {
@@ -3826,15 +3825,15 @@
           <div class="__efb-sm-toolbar-left">
             <span class="__efb-sm-label">Baud</span>
             <select class="__efb-sm-select" id="__efb-sm-baud">
-              <option value="9600">9600</option>
-              <option value="19200">19200</option>
-              <option value="38400">38400</option>
-              <option value="57600">57600</option>
-              <option value="74880">74880 (Boot)</option>
-              <option value="115200" selected>115200</option>
-              <option value="230400">230400</option>
-              <option value="460800">460800</option>
-              <option value="921600">921600</option>
+              <option value="9600" ${baud === 9600 ? 'selected' : ''}>9600</option>
+              <option value="19200" ${baud === 19200 ? 'selected' : ''}>19200</option>
+              <option value="38400" ${baud === 38400 ? 'selected' : ''}>38400</option>
+              <option value="57600" ${baud === 57600 ? 'selected' : ''}>57600</option>
+              <option value="74880" ${baud === 74880 ? 'selected' : ''}>74880 (Boot)</option>
+              <option value="115200" ${baud === 115200 ? 'selected' : ''}>115200</option>
+              <option value="230400" ${baud === 230400 ? 'selected' : ''}>230400</option>
+              <option value="460800" ${baud === 460800 ? 'selected' : ''}>460800</option>
+              <option value="921600" ${baud === 921600 ? 'selected' : ''}>921600</option>
             </select>
             <span class="__efb-sm-label">EOL</span>
             <select class="__efb-sm-select" id="__efb-sm-eol">
@@ -3958,7 +3957,7 @@
 
       // Open port for serial monitor
       try {
-        await this._startSerialReadLoop(115200);
+        await this._startSerialReadLoop(baud);
       } catch (e) {
         this._smAppendLine(`[Failed to initialize serial: ${e.message}]`, 'err');
         const statusEl = this._smModal?.querySelector('#__efb-sm-statustext');
