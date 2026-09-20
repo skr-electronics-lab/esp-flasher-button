@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Blog — ESP32 Firmware Installer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f8f9fa; color: #333; line-height: 1.7; padding: 40px 20px;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 28px; margin-bottom: 8px; }
+  .meta { color: #888; font-size: 14px; margin-bottom: 24px; }
+  p { margin-bottom: 16px; color: #444; }
+  .install-section {
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 12px;
+    padding: 24px; margin: 32px 0;
+  }
+  .install-section h2 { font-size: 18px; margin-bottom: 12px; }
+  .install-section p { font-size: 14px; color: #666; margin-bottom: 16px; }
+  code {
+    background: #eee; padding: 2px 6px; border-radius: 4px;
+    font-size: 13px; font-family: 'JetBrains Mono', monospace;
+  }
+  hr { border: none; border-top: 1px solid #e0e0e0; margin: 32px 0; }
+  .footer { font-size: 13px; color: #aaa; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Building a Smart ESP32 Sensor</h1>
+  <div class="meta">Posted on June 28, 2026 · by SKR Electronics Lab</div>
+
+  <p>In this tutorial, we'll build a wireless temperature and humidity sensor using the ESP32-S3. The firmware connects to Wi-Fi and publishes data via MQTT every 30 seconds.</p>
+
+  <p>You'll need an ESP32-S3 or ESP32 development board and a USB cable. No IDE or drivers required — everything happens in your browser.</p>
+
+  <!-- ── Flash Button ── -->
+  <div class="install-section">
+    <h2>⚡ Install Firmware</h2>
+    <p>Connect your ESP board via USB and click the button below. The installer will auto-detect your chip and flash the correct firmware.</p>
+
+    <esp-flash-button
+      manifest="manifest.json"
+      label="Install Sensor Firmware"
+      erase-first>
+    </esp-flash-button>
+  </div>
+
+  <h2>Wiring Guide</h2>
+  <p>Connect the DHT22 sensor to GPIO4 (data), VCC to 3.3V, and GND to GND. The onboard LED on GPIO2 will blink once per second after a successful connection.</p>
+
+  <p>Once flashed, open the Serial Monitor at 115200 baud to see the device logs, or watch the LED pattern — 3 quick blinks means Wi-Fi connected.</p>
+
+  <hr />
+
+  <h2>Using Your Own Button</h2>
+  <p>You can also style the button yourself using the <code>slot="activate"</code> attribute:</p>
+
+  <div class="install-section">
+    <esp-flash-button manifest="manifest.json">
+      <button slot="activate" style="background:#007bff;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">
+        ⚡ Flash My Custom Button
+      </button>
+    </esp-flash-button>
+  </div>
+
+  <hr />
+
+  <h2>Embed This on Your Site</h2>
+  <p>Adding the ESP Flash Button to your own blog or project page is just two lines:</p>
+  <pre style="background:#1e1e1e;color:#ccc;padding:16px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.6;margin-bottom:16px;">
+&lt;script src="https://esp-flash-button.pages.dev/esp-flash-button.js"&gt;&lt;/script&gt;
+&lt;esp-flash-button manifest="https://yoursite.com/manifest.json"&gt;&lt;/esp-flash-button&gt;
+  </pre>
+  <p>No build step, no npm, no framework. Works in any static site, WordPress, Ghost, or CMS.</p>
+
+  <div class="footer">&copy; 2026 SKR Electronics Lab. All flashing is local — no data is uploaded.</div>
+</div>
+
+<!-- Load the flash button component from the parent project -->
+<script src="../esp-flash-button.js"></script>
+</body>
+</html>

@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ESP Flash Button — Embeddable ESP32/ESP8266 Browser Firmware Installer</title>
+<meta name="description" content="ESP Flash Button is a free, open-source web component that lets you add a one-click firmware installer to any website. Flash ESP32, ESP8266, and ESP32-S3 devices directly from the browser. No drivers, no IDE, no boot button hold." />
+<meta name="keywords" content="ESP32 firmware installer, ESP8266 web flasher, browser-based ESP flashing, embeddable firmware installer, ESP Web Tools alternative, SKR Electronics Lab, esptool-js, web serial ESP32" />
+<meta name="author" content="SKR Electronics Lab" />
+<meta property="og:title" content="ESP Flash Button — One-Click ESP32 Firmware Installer for Your Website" />
+<meta property="og:description" content="Embed a firmware flasher on your blog or product page. Your visitors flash ESP32/ESP8266/ESP32-S3 devices directly in the browser — no tools, no drivers, no hassle." />
+<meta property="og:url" content="https://esp-flash-button.pages.dev" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="ESP Flash Button — ESP32 Firmware Installer for Your Site" />
+<meta name="twitter:description" content="Add a one-click ESP32/ESP8266 firmware flasher to any webpage. No build tools, no dependencies." />
+<meta name="theme-color" id="meta-theme" content="#07070a" />
+<link rel="canonical" href="https://esp-flash-button.pages.dev" />
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ESP Flash Button","applicationCategory":"DeveloperApplication","operatingSystem":"Web (Chrome, Edge, Opera)","browserRequirements":"Web Serial API","description":"Embeddable web component that adds a one-click ESP32/ESP8266 firmware installer to any website.","author":{"@type":"Organization","name":"SKR Electronics Lab","url":"https://skrelectronicslab.com"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"softwareVersion":"1.0"}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+/* ────────────────────────────────────────────
+   RESET & TOKENS
+──────────────────────────────────────────── */
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+
+:root {
+  --ink:    #07070a;
+  --ink2:   #0c0c10;
+  --surf:   #101014;
+  --surf2:  #141418;
+  --surf3:  #1a1a20;
+  --line:   #1c1c24;
+  --line2:  #242430;
+  --red:    #e0302a;
+  --red2:   #c02020;
+  --red3:   #ff4a40;
+  --red-gl: rgba(224,48,42,.18);
+  --green:  #3dd68c;
+  --green2: #2ab872;
+  --amber:  #f59e0b;
+  --blue:   #4d9de0;
+  --text:   #eeeef2;
+  --text2:  #9090a8;
+  --text3:  #48485a;
+  --text4:  #2a2a38;
+  --mono:   'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  --sans:   'Inter', system-ui, sans-serif;
+  --radius: 14px;
+}
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.65;
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* ────────────────────────────────────────────
+   CUSTOM CURSOR
+──────────────────────────────────────────── */
+#cur-dot {
+  position: fixed; pointer-events: none; z-index: 99999;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red);
+  transform: translate(-50%,-50%);
+  transition: width .15s, height .15s, opacity .15s;
+  mix-blend-mode: normal;
+}
+#cur-ring {
+  position: fixed; pointer-events: none; z-index: 99998;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1.5px solid rgba(224,48,42,.5);
+  transform: translate(-50%,-50%);
+  transition: width .25s cubic-bezier(.34,1.56,.64,1),
+              height .25s cubic-bezier(.34,1.56,.64,1),
+              border-color .2s;
+}
+body:has(a:hover) #cur-ring,
+body:has(button:hover) #cur-ring {
+  width: 56px; height: 56px;
+  border-color: rgba(224,48,42,.35);
+}
+#cur-glow {
+  position: fixed; pointer-events: none; z-index: 0;
+  width: 700px; height: 700px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(224,48,42,.045) 0%, transparent 65%);
+  transform: translate(-50%,-50%);
+  will-change: transform;
+  opacity: 0; transition: opacity .4s;
+}
+#cursor-particles {
+  position: fixed; inset: 0; z-index: 1;
+  pointer-events: none;
+}
+#rain-canvas {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; opacity: 0.25;
+}
+
+/* ────────────────────────────────────────────
+   CIRCUIT CANVAS (hero background)
+──────────────────────────────────────────── */
+#circuit-canvas {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; opacity: 0.5;
+}
+
+/* ────────────────────────────────────────────
+   SCANLINE OVERLAY
+──────────────────────────────────────────── */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 99997;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,.03) 2px,
+    rgba(0,0,0,.03) 4px
+  );
+}
+
+/* ────────────────────────────────────────────
+   LAYOUT
+──────────────────────────────────────────── */
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 28px; position: relative; z-index: 1; }
+.section-divider { height: 1px; background: var(--line); margin: 0; }
+
+/* ────────────────────────────────────────────
+   SCROLL REVEAL
+──────────────────────────────────────────── */
+.rev {
+  opacity: 0; transform: translateY(32px);
+  transition: opacity .7s ease, transform .7s cubic-bezier(.22,1,.36,1);
+}
+.rev.vis { opacity: 1; transform: translateY(0); }
+.rev-l { opacity: 0; transform: translateX(-24px); transition: opacity .7s ease, transform .7s cubic-bezier(.22,1,.36,1); }
+.rev-l.vis { opacity: 1; transform: translateX(0); }
+.rev-r { opacity: 0; transform: translateX(24px); transition: opacity .7s ease, transform .7s cubic-bezier(.22,1,.36,1); }
+.rev-r.vis { opacity: 1; transform: translateX(0); }
+
+/* ────────────────────────────────────────────
+   HEADER
+──────────────────────────────────────────── */
+.site-header {
+  padding: 18px 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 1000;
+  background: rgba(7,7,10,.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+.brand { display: flex; align-items: center; gap: 11px; text-decoration: none; }
+.brand-logo {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, #1a0404, #280808);
+  border: 1px solid #3a1010;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.brand-logo::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(224,48,42,.3), transparent 60%);
+}
+.brand-logo svg { width: 18px; height: 18px; color: var(--red); position: relative; }
+.brand-name { font-size: 14px; font-weight: 800; color: var(--text); letter-spacing: -.02em; }
+.brand-tag { font-size: 10px; color: var(--text3); font-family: var(--mono); letter-spacing: .04em; margin-top: 1px; }
+.nav { display: flex; gap: 6px; align-items: center; }
+.nav-a {
+  font-size: 12.5px; color: var(--text3); text-decoration: none;
+  padding: 6px 12px; border-radius: 8px;
+  transition: color .15s, background .15s;
+  font-weight: 500;
+}
+.nav-a:hover { color: var(--text2); background: var(--surf2); }
+.nav-a:focus-visible { outline: 2px solid var(--red); outline-offset: 4px; border-radius: 4px; }
+.nav-cta {
+  font-size: 12.5px; font-weight: 600; color: var(--text);
+  padding: 7px 16px; border-radius: 9px;
+  background: var(--surf3); border: 1px solid var(--line2);
+  text-decoration: none; transition: all .15s;
+}
+.nav-cta:hover { border-color: var(--red); color: var(--red); }
+.nav-gh {
+  display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600;
+  color: var(--text2); padding: 7px 14px; border-radius: 9px;
+  background: var(--surf2); border: 1px solid var(--line);
+  text-decoration: none; transition: all .15s;
+}
+.nav-gh:hover { color: var(--text); border-color: var(--line2); }
+.nav-gh svg { width: 14px; height: 14px; }
+
+
+/* ────────────────────────────────────────────
+   HERO
+──────────────────────────────────────────── */
+.hero {
+  padding: 100px 0 80px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 28px; position: relative;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  color: var(--text3); letter-spacing: .1em; text-transform: uppercase;
+  padding: 6px 14px; border-radius: 100px;
+  background: var(--surf2); border: 1px solid var(--line2);
+}
+.hero-eyebrow-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+  box-shadow: 0 0 6px var(--green); animation: blink 2.2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.hero-h1 {
+  font-size: clamp(38px,7.5vw,72px); font-weight: 900;
+  letter-spacing: -.04em; line-height: 1.03; max-width: 780px;
+  color: var(--text);
+}
+.hero-h1 .accent {
+  background: linear-gradient(135deg, var(--red3) 0%, var(--red) 60%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-sub {
+  font-size: 17px; color: var(--text2); max-width: 600px; line-height: 1.7; font-weight: 400;
+}
+.hero-stats {
+  display: flex; gap: 0; border: 1px solid var(--line2); border-radius: 12px;
+  overflow: hidden; background: var(--surf);
+}
+.hero-stat {
+  padding: 16px 28px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border-right: 1px solid var(--line2);
+  position: relative;
+}
+.hero-stat:last-child { border-right: none; }
+.hero-stat-val { font-size: 24px; font-weight: 800; color: var(--text); letter-spacing: -.03em; font-family: var(--mono); }
+.hero-stat-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.hero-stat .red  { color: var(--red); }
+.hero-stat .grn  { color: var(--green); }
+.hero-ctas { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 26px; border-radius: 10px; border: none; cursor: pointer;
+  font-family: var(--sans); font-size: 14px; font-weight: 700;
+  color: #fff; background: linear-gradient(135deg, var(--red3), var(--red2));
+  box-shadow: 0 0 0 1px rgba(224,48,42,.4), 0 4px 20px rgba(224,48,42,.3);
+  transition: all .18s; letter-spacing: -.01em; text-decoration: none;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px rgba(224,48,42,.6), 0 8px 32px rgba(224,48,42,.45);
+}
+.btn-primary:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+.btn-ghost:focus-visible { outline: 2px solid var(--text3); outline-offset: 3px; }
+.faq-q:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.cpy-btn:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.sm-tbtn:focus-visible { outline: 2px solid var(--text3); outline-offset: 2px; }
+.sm-send:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.sm-select:focus-visible { outline: 2px solid var(--text3); outline-offset: 2px; }
+esp-flash-button:focus-visible { outline: 2px solid var(--red); outline-offset: 4px; border-radius: 4px; }
+.btn-primary svg { width: 16px; height: 16px; }
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 24px; border-radius: 10px; cursor: pointer;
+  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  color: var(--text2); background: transparent;
+  border: 1px solid var(--line2); transition: all .18s; text-decoration: none;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--text3); background: var(--surf2); }
+.btn-ghost svg { width: 15px; height: 15px; }
+
+/* ────────────────────────────────────────────
+   DEMO BLOCK
+──────────────────────────────────────────── */
+.demo-wrap {
+  max-width: 680px; margin: 0 auto; width: 100%;
+}
+.demo-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--surf2); border: 1px solid var(--line2);
+  border-radius: 12px 12px 0 0; border-bottom: none;
+}
+.demo-dots { display: flex; gap: 6px; }
+.demo-dot { width: 11px; height: 11px; border-radius: 50%; }
+.demo-dot-r { background: #ff5f57; }
+.demo-dot-y { background: #febc2e; }
+.demo-dot-g { background: #28c840; }
+.demo-title { font-size: 11px; font-family: var(--mono); color: var(--text3); letter-spacing: .05em; }
+.demo-body {
+  background: var(--surf); border: 1px solid var(--line2);
+  border-radius: 0 0 12px 12px; padding: 28px;
+  display: flex; flex-direction: column; gap: 20px;
+  position: relative; overflow: hidden;
+}
+.demo-body::before {
+  content: '';
+  position: absolute; top: -80px; right: -60px;
+  width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(224,48,42,.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.demo-live-label {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 10px; font-family: var(--mono); color: var(--text3);
+  text-transform: uppercase; letter-spacing: .1em; font-weight: 600;
+}
+.demo-live-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--green);
+  box-shadow: 0 0 5px var(--green); animation: blink 2.2s ease-in-out infinite;
+}
+.demo-btn-row { display: flex; justify-content: center; margin-bottom:24px; }
+.demo-btn-row esp-flash-button {
+  transform:scale(1.05);
+}
+.demo-themes-section {
+  border-top:1px solid var(--line); padding-top:20px;
+}
+.demo-themes-label {
+  font-size: 10px; color: var(--text4); font-family: var(--mono); letter-spacing: .08em;
+  text-transform: uppercase; font-weight: 600; margin-bottom: 16px;
+}
+.demo-theme-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+}
+.demo-theme-card {
+  background: var(--surf2); border: 1px solid var(--line);
+  border-radius: 10px; padding: 14px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  transition: border-color .2s;
+}
+.demo-theme-card:hover { border-color: var(--line2); }
+.demo-modal-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom:20px;
+}
+.demo-modal-card {
+  background: var(--surf2); border: 1px solid var(--line);
+  border-radius: 10px; padding: 16px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  transition: border-color .2s;
+}
+.demo-modal-card:hover { border-color: var(--line2); }
+.demo-theme-name {
+  font-size: 10px; font-family: var(--mono); color: var(--text4);
+  text-transform: uppercase; letter-spacing: .1em; font-weight: 600;
+}
+
+/* ────────────────────────────────────────────
+   SECTIONS
+──────────────────────────────────────────── */
+.section { padding: 72px 0; }
+.section-head { margin-bottom: 40px; }
+.tag {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em; color: var(--red);
+  text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono);
+}
+.tag::before { content: '//'; color: var(--text4); }
+.section-h { font-size: clamp(24px,3.5vw,34px); font-weight: 800; letter-spacing: -.03em; color: var(--text); margin-bottom: 12px; line-height: 1.15; }
+.section-sub { font-size: 15px; color: var(--text2); max-width: 560px; line-height: 1.7; }
+
+/* ────────────────────────────────────────────
+   WHAT GRID
+──────────────────────────────────────────── */
+.what-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.what-card {
+  background: var(--surf); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 22px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+  position: relative; overflow: hidden;
+}
+.what-card::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--red-gl), transparent);
+  opacity: 0; transition: opacity .3s;
+}
+.what-card:hover { border-color: var(--line2); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,.4); }
+.what-card:hover::after { opacity: 1; }
+.wc-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+}
+.wc-icon svg { width: 18px; height: 18px; }
+.ic-red    { background: rgba(224,48,42,.08); border: 1px solid rgba(224,48,42,.14); color: var(--red); }
+.ic-green  { background: rgba(61,214,140,.08); border: 1px solid rgba(61,214,140,.14); color: var(--green); }
+.ic-blue   { background: rgba(77,157,224,.08); border: 1px solid rgba(77,157,224,.14); color: var(--blue); }
+.ic-amber  { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.14); color: var(--amber); }
+.wc-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 7px; }
+.wc-desc { font-size: 13px; color: var(--text2); line-height: 1.65; }
+
+/* ────────────────────────────────────────────
+   HOW IT WORKS — TIMELINE
+──────────────────────────────────────────── */
+.timeline { display: flex; flex-direction: column; gap: 0; position: relative; }
+.timeline::before {
+  content: '';
+  position: absolute; left: 15px; top: 28px; bottom: 28px; width: 1px;
+  background: linear-gradient(180deg, var(--red) 0%, var(--line2) 100%);
+}
+.tl-step { display: flex; gap: 22px; padding: 0 0 40px; position: relative; }
+.tl-step:last-child { padding-bottom: 0; }
+.tl-num {
+  width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--red);
+  background: var(--surf2); border: 1px solid rgba(224,48,42,.25);
+  position: relative; z-index: 1;
+}
+.tl-content { flex: 1; padding-top: 5px; }
+.tl-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.tl-desc { font-size: 13.5px; color: var(--text2); line-height: 1.65; }
+
+/* ────────────────────────────────────────────
+   CODE BLOCKS
+──────────────────────────────────────────── */
+.code-wrap { position: relative; margin: 10px 0; }
+pre {
+  background: var(--surf2); border: 1px solid var(--line);
+  border-radius: 11px; padding: 16px 18px; overflow-x: auto;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.75;
+  color: #b0bcd0; white-space: pre;
+}
+pre .c-tag  { color: #d06060; }
+pre .c-attr { color: #7aaddd; }
+pre .c-str  { color: #7acc88; }
+pre .c-com  { color: #3a4c5e; font-style: italic; }
+pre .c-key  { color: #e0a060; }
+pre .c-num  { color: #a888dd; }
+.cpy-btn {
+  position: absolute; top: 10px; right: 10px;
+  padding: 5px 11px; border-radius: 7px;
+  border: 1px solid var(--line2); background: var(--surf3);
+  color: var(--text3); font-size: 11px; font-family: var(--sans);
+  font-weight: 600; cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 5px; letter-spacing: .02em;
+}
+.cpy-btn:hover { background: var(--line); color: var(--text2); }
+.cpy-btn.done  { color: var(--green); border-color: rgba(61,214,140,.3); }
+.cpy-btn svg   { width: 11px; height: 11px; }
+
+/* ────────────────────────────────────────────
+   USAGE STEPS
+──────────────────────────────────────────── */
+.usage-steps { display: flex; flex-direction: column; gap: 36px; }
+.usage-step { display: flex; gap: 20px; }
+.step-badge {
+  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  color: var(--red); background: rgba(224,48,42,.08);
+  border: 1px solid rgba(224,48,42,.18); margin-top: 3px;
+}
+.step-body { flex: 1; }
+.step-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.step-desc { font-size: 13.5px; color: var(--text2); line-height: 1.65; margin-bottom: 10px; }
+code.inline {
+  font-family: var(--mono); font-size: 12px; background: var(--surf3);
+  padding: 2px 7px; border-radius: 5px; color: #7acc88; border: 1px solid var(--line);
+}
+
+/* ────────────────────────────────────────────
+   FEATURE GRID
+──────────────────────────────────────────── */
+.feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.feat-card {
+  background: var(--surf); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 22px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+  position: relative; overflow: hidden;
+}
+.feat-card:hover { border-color: var(--line2); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,.4); }
+.feat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+.feat-icon svg { width: 20px; height: 20px; }
+.fi-red    { background: rgba(224,48,42,.08); border: 1px solid rgba(224,48,42,.14); color: var(--red); }
+.fi-green  { background: rgba(61,214,140,.08); border: 1px solid rgba(61,214,140,.14); color: var(--green); }
+.fi-blue   { background: rgba(77,157,224,.08); border: 1px solid rgba(77,157,224,.14); color: var(--blue); }
+.fi-amber  { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.14); color: var(--amber); }
+.fi-purple { background: rgba(160,80,224,.08); border: 1px solid rgba(160,80,224,.14); color: #a060e0; }
+.fi-teal   { background: rgba(32,200,180,.08); border: 1px solid rgba(32,200,180,.14); color: #20c8b4; }
+.feat-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 7px; }
+.feat-desc  { font-size: 13px; color: var(--text2); line-height: 1.65; }
+
+/* ────────────────────────────────────────────
+   SERIAL MONITOR DEMO
+──────────────────────────────────────────── */
+.sm-demo-outer { max-width: 700px; margin: 0 auto; }
+.sm-demo-label {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+  font-size: 11px; font-family: var(--mono); color: var(--text3);
+  text-transform: uppercase; letter-spacing: .1em; font-weight: 600;
+}
+.sm-live-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+  box-shadow: 0 0 6px var(--green); animation: blink 2.2s ease-in-out infinite;
+}
+.sm-window {
+  background: var(--ink); border: 1px solid var(--line2);
+  border-radius: var(--radius); overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,.6);
+}
+.sm-titlebar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; background: var(--surf);
+  border-bottom: 1px solid var(--line);
+}
+.sm-wdots { display: flex; gap: 6px; }
+.sm-wdot { width: 11px; height: 11px; border-radius: 50%; }
+.sm-wdot-r { background: #ff5f57; } .sm-wdot-y { background: #febc2e; } .sm-wdot-g { background: #28c840; }
+.sm-wtitle { display: flex; align-items: center; gap: 8px; }
+.sm-wtitle-icon { width: 16px; height: 16px; color: var(--green); }
+.sm-wtitle-text { font-size: 12px; font-family: var(--mono); color: var(--text2); }
+.sm-conn { display: flex; align-items: center; gap: 5px; font-size: 10px; font-family: var(--mono); color: var(--green); }
+.sm-conn-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: blink 2.2s ease-in-out infinite; }
+.sm-toolbar {
+  display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+  border-bottom: 1px solid var(--line); flex-wrap: wrap;
+}
+.sm-tl-left { display: flex; align-items: center; gap: 8px; flex: 1; }
+.sm-lbl { font-size: 9.5px; font-family: var(--mono); color: var(--text4); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; white-space: nowrap; }
+.sm-select {
+  background: var(--surf2); border: 1px solid var(--line); border-radius: 6px;
+  color: var(--text2); font-size: 11px; padding: 4px 8px;
+  font-family: var(--mono); cursor: pointer; outline: none;
+  transition: border-color .15s;
+}
+.sm-select:focus { border-color: var(--line2); }
+.sm-tbtn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 6px;
+  border: 1px solid var(--line); background: var(--surf2);
+  color: var(--text3); font-size: 10.5px; font-weight: 600;
+  cursor: pointer; font-family: var(--mono); transition: all .15s; white-space: nowrap;
+}
+.sm-tbtn svg { width: 11px; height: 11px; }
+.sm-tbtn:hover { color: var(--text2); border-color: var(--line2); background: var(--surf3); }
+.sm-tbtn.active { color: var(--green); border-color: rgba(61,214,140,.3); background: rgba(61,214,140,.07); }
+.sm-tbtn-clear { color: #3a2020; border-color: #1e1414; }
+.sm-tbtn-clear:hover { color: #e05050; border-color: rgba(224,80,80,.3); background: rgba(224,80,80,.06); }
+.sm-output {
+  height: 220px; overflow-y: auto; padding: 14px 18px;
+  font-family: var(--mono); font-size: 12px; line-height: 1.75;
+  background: var(--ink2);
+  scrollbar-width: thin; scrollbar-color: var(--text4) transparent;
+}
+.sm-output::-webkit-scrollbar { width: 4px; }
+.sm-output::-webkit-scrollbar-thumb { background: #1a1a28; border-radius: 2px; }
+.sm-line { display: block; word-break: break-all; }
+.sm-line.rx  { color: #b0c4d8; }
+.sm-line.tx  { color: var(--amber); }
+.sm-line.sys { color: var(--text4); font-style: italic; }
+.sm-line.err { color: #e05050; }
+.sm-line.ok  { color: var(--green); }
+.sm-empty-hint { color: var(--text4); font-size: 12px; font-style: italic; }
+.sm-input-row {
+  display: flex; gap: 8px; padding: 12px 16px;
+  border-top: 1px solid var(--line); background: var(--ink);
+}
+.sm-input {
+  flex: 1; background: var(--surf2); border: 1px solid var(--line);
+  border-radius: 8px; color: var(--text); font-family: var(--mono); font-size: 12px;
+  padding: 8px 12px; outline: none; transition: border-color .15s;
+}
+.sm-input::placeholder { color: var(--text4); }
+.sm-input:focus { border-color: var(--line2); }
+.sm-send {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
+  font-size: 12px; font-weight: 700; color: #fff;
+  background: linear-gradient(135deg, var(--red3), var(--red2));
+  transition: all .15s; font-family: var(--sans); flex-shrink: 0;
+}
+.sm-send svg { width: 12px; height: 12px; }
+.sm-send:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(224,48,42,.4); }
+.sm-footer-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 16px; background: var(--ink2); border-top: 1px solid var(--line);
+}
+.sm-footer-credit { font-size: 9.5px; color: var(--text4); font-family: var(--mono); letter-spacing: .04em; text-decoration: none; transition: color .15s; }
+.sm-footer-credit:hover { color: var(--text3); }
+.sm-line-count { font-size: 10px; color: var(--text4); font-family: var(--mono); }
+
+/* ── AI Prompt section ── */
+.ai-section {
+  margin-top:48px; padding:24px; border-radius:12px;
+  background:var(--surf2); border:1px solid var(--line);
+}
+.ai-header {
+  display:flex; align-items:center; gap:10px; margin-bottom:14px;
+}
+.ai-header svg { width:18px; height:18px; color:var(--amber); }
+.ai-title { font-size:13px; font-weight:600; color:var(--text); }
+.ai-desc { font-size:12px; color:var(--text2); line-height:1.6; margin-bottom:14px; }
+.ai-prompt-box {
+  background:var(--surf); border:1px solid var(--line); border-radius:8px;
+  padding:16px; font-size:11.5px; font-family:var(--mono); color:var(--text2);
+  line-height:1.65; max-height:200px; overflow-y:auto; margin-bottom:12px;
+  white-space:pre-wrap; word-break:break-word;
+}
+.ai-prompt-box::-webkit-scrollbar { width:3px; }
+.ai-prompt-box::-webkit-scrollbar-thumb { background:var(--line2); border-radius:2px; }
+.ai-copy-row { display:flex; gap:10px; align-items:center; }
+.ai-copy-btn {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 16px; border-radius:7px; border:1px solid var(--line2);
+  background:var(--surf); color:var(--text3); font-size:12px; font-weight:600;
+  cursor:pointer; font-family:var(--sans); transition:all .15s;
+}
+.ai-copy-btn:hover { background:var(--surf3); color:var(--text2); border-color:var(--line2); }
+.ai-copy-btn svg { width:13px; height:13px; }
+.ai-copy-btn.copied { background:rgba(61,214,140,.1); border-color:rgba(61,214,140,.3); color:var(--green); }
+.ai-copy-note { font-size:11px; color:var(--text4); }
+
+/* ── Serial Monitor Simulation (uses real __efb-sm-* classes) ── */
+.sm-demo-inner {
+  background:var(--ink); border:1px solid var(--line2);
+  border-radius:var(--radius); overflow:hidden;
+  box-shadow:0 24px 60px rgba(0,0,0,.6);
+  position:relative;
+}
+.sm-demo-inner .__efb-sm-header {
+  display:flex; align-items:center; gap:12px; padding:14px 18px;
+  border-bottom:1px solid var(--line); flex-shrink:0;
+}
+.sm-demo-inner .__efb-sm-hicon {
+  width:34px; height:34px; border-radius:8px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#0a0a0e,#141420);
+  border:1px solid #1e1e2e; color:#3dd68c;
+}
+.sm-demo-inner .__efb-sm-hicon svg { width:16px; height:16px; }
+.sm-demo-inner .__efb-sm-htitles { flex:1; min-width:0; }
+.sm-demo-inner .__efb-sm-htitle { font-size:14px; font-weight:700; color:#e0e0e8; letter-spacing:-.01em; }
+.sm-demo-inner .__efb-sm-hsub { font-size:11px; color:#3dd68c; margin-top:1px; display:flex; align-items:center; gap:5px; }
+.sm-demo-inner .__efb-sm-dot {
+  width:6px; height:6px; border-radius:50%; background:#3dd68c;
+  box-shadow:0 0 5px rgba(61,214,140,.6); display:inline-block; flex-shrink:0;
+}
+.sm-demo-inner .__efb-sm-status-dot {
+  width:6px; height:6px; border-radius:50%; background:#3dd68c;
+  box-shadow:0 0 5px rgba(61,214,140,.6); display:inline-block; flex-shrink:0;
+}
+.sm-demo-inner .__efb-sm-toolbar {
+  display:flex; align-items:center; gap:8px; padding:8px 18px;
+  border-bottom:1px solid #141418; flex-shrink:0; flex-wrap:wrap;
+}
+.sm-demo-inner .__efb-sm-toolbar-left { display:flex; align-items:center; gap:8px; flex:1; }
+.sm-demo-inner .__efb-sm-label { font-size:10px; font-weight:600; color:#404048; text-transform:uppercase; letter-spacing:.08em; white-space:nowrap; }
+.sm-demo-inner .__efb-sm-select {
+  background:#16161a; border:1px solid #222228; border-radius:6px;
+  color:#888; font-size:11px; padding:4px 8px; font-family:var(--mono);
+  cursor:pointer; outline:none; transition:border-color .15s;
+}
+.sm-demo-inner .__efb-sm-select:hover, .sm-demo-inner .__efb-sm-select:focus { border-color:#2e2e38; color:#bbb; }
+.sm-demo-inner .__efb-sm-tbtn {
+  display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:6px;
+  border:1px solid #1e1e26; background:#16161a; color:#555; font-size:11px; font-weight:500;
+  cursor:pointer; font-family:var(--mono); transition:all .15s; white-space:nowrap;
+}
+.sm-demo-inner .__efb-sm-tbtn svg { width:12px; height:12px; }
+.sm-demo-inner .__efb-sm-tbtn:hover { color:#aaa; border-color:#2a2a34; background:#1c1c22; }
+.sm-demo-inner .__efb-sm-tbtn.active { color:#3dd68c; border-color:rgba(61,214,140,.22); background:rgba(61,214,140,.1); }
+.sm-demo-inner .__efb-sm-tbtn-clear { color:#553030; border-color:#1e1616; }
+.sm-demo-inner .__efb-sm-tbtn-clear:hover { color:#e05050; border-color:rgba(224,80,80,.3); background:rgba(224,80,80,.06); }
+.sm-demo-inner .__efb-sm-output {
+  height:220px; overflow-y:auto; padding:12px 16px;
+  font-family:var(--mono); font-size:11.5px; line-height:1.7;
+  scrollbar-width:thin; scrollbar-color:#1e1e26 transparent;
+  background:#0c0c10;
+}
+.sm-demo-inner .__efb-sm-output::-webkit-scrollbar { width:4px; }
+.sm-demo-inner .__efb-sm-output::-webkit-scrollbar-thumb { background:#1e1e26; border-radius:2px; }
+.sm-demo-inner .__efb-sm-line { display:block; word-break:break-all; }
+.sm-demo-inner .__efb-sm-line.rx  { color:#c0c8d0; }
+.sm-demo-inner .__efb-sm-line.tx  { color:var(--amber); }
+.sm-demo-inner .__efb-sm-line.sys { color:#404048; font-style:italic; }
+.sm-demo-inner .__efb-sm-line.err { color:#e05050; }
+.sm-demo-inner .__efb-sm-line.ok  { color:var(--green); }
+.sm-demo-inner .__efb-sm-input-row {
+  display:flex; gap:8px; padding:12px 16px;
+  border-top:1px solid #141418; flex-shrink:0; align-items:center; background:#0e0e12;
+}
+.sm-demo-inner .__efb-sm-input {
+  flex:1; background:#14141a; border:1px solid #1e1e26; border-radius:8px;
+  color:#c0c8d0; font-family:var(--mono); font-size:12px;
+  padding:8px 12px; outline:none; transition:border-color .15s;
+}
+.sm-demo-inner .__efb-sm-input::placeholder { color:#282838; }
+.sm-demo-inner .__efb-sm-input:focus { border-color:#2a2a38; }
+.sm-demo-inner .__efb-sm-send {
+  display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:8px;
+  border:none; cursor:pointer; font-size:12px; font-weight:600; color:#fff;
+  background:linear-gradient(135deg,#e03030,#b81f1f); transition:all .15s; flex-shrink:0;
+  font-family:var(--sans);
+}
+.sm-demo-inner .__efb-sm-send svg { width:13px; height:13px; }
+.sm-demo-inner .__efb-sm-send:hover { background:linear-gradient(135deg,#f04040,#c82020); transform:translateY(-1px); }
+.sm-demo-inner .__efb-sm-footer {
+  display:flex; align-items:center; justify-content:space-between; padding:8px 16px;
+  border-top:1px solid #0e0e14; flex-shrink:0; background:#0a0a0e;
+}
+.sm-demo-inner .__efb-sm-footer-credit { font-size:9px; color:#282830; text-decoration:none; }
+.sm-demo-inner .__efb-sm-footer-credit:hover { color:#404048; }
+.sm-demo-inner .__efb-sm-count { font-size:10px; color:#282830; font-family:var(--mono); }
+
+/* Web Serial callout */
+.ws-note {
+  margin-top: 16px; padding: 14px 18px; border-radius: 10px;
+  background: var(--surf2); border: 1px solid var(--line2);
+  display: flex; align-items: flex-start; gap: 12px;
+  font-size: 13px; color: var(--text2); line-height: 1.6;
+}
+.ws-note svg { width: 16px; height: 16px; color: var(--amber); flex-shrink: 0; margin-top: 2px; }
+
+/* ────────────────────────────────────────────
+   COMPARISON TABLE
+──────────────────────────────────────────── */
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.cmp-card {
+  background: var(--surf); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 22px;
+}
+.cmp-card.hl { border-color: rgba(224,48,42,.22); background: rgba(224,48,42,.02); }
+.cmp-head {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 8px;
+}
+.cmp-head svg { width: 14px; height: 14px; }
+.cmp-item { display: flex; gap: 8px; font-size: 13px; color: var(--text2); padding: 5px 0; line-height: 1.5; }
+.ci-y { color: var(--green); flex-shrink: 0; margin-top: 1px; }
+.ci-n { color: var(--text4); flex-shrink: 0; margin-top: 1px; }
+.ci-y svg, .ci-n svg { width: 14px; height: 14px; }
+
+/* ────────────────────────────────────────────
+   ATTRS TABLE
+──────────────────────────────────────────── */
+.tbl-wrap { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead tr { background: var(--surf2); }
+th {
+  text-align: left; padding: 10px 16px; font-size: 10px; font-weight: 700;
+  color: var(--text3); text-transform: uppercase; letter-spacing: .08em;
+  border-bottom: 1px solid var(--line); font-family: var(--mono);
+}
+td { padding: 10px 16px; border-bottom: 1px solid var(--line); color: var(--text2); }
+tbody tr:last-child td { border-bottom: none; }
+.td-mono { font-family: var(--mono); font-size: 12px; color: #7aaddd; }
+.td-event { font-family: var(--mono); font-size: 12px; color: var(--amber); }
+td code { font-family: var(--mono); font-size: 11px; background: var(--surf2); padding: 2px 6px; border-radius: 4px; color: #7acc88; border: 1px solid var(--line); }
+
+/* ────────────────────────────────────────────
+   CHIP LIST
+──────────────────────────────────────────── */
+.chip-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip-pill {
+  padding: 7px 16px; border-radius: 9px; font-size: 12.5px; font-weight: 700;
+  font-family: var(--mono); background: var(--surf2); border: 1px solid var(--line2);
+  color: var(--text2); transition: all .15s; cursor: default;
+}
+.chip-pill:hover { border-color: var(--red); color: var(--text); }
+
+/* ────────────────────────────────────────────
+   MANIFEST FORMAT
+──────────────────────────────────────────── */
+.manifest-note {
+  background: var(--surf2); border: 1px solid rgba(245,158,11,.2);
+  border-radius: 11px; padding: 16px 18px;
+  display: flex; gap: 12px; align-items: flex-start; margin-bottom: 20px;
+  font-size: 13px; color: var(--text2); line-height: 1.65;
+}
+.manifest-note svg { width: 16px; height: 16px; color: var(--amber); flex-shrink: 0; margin-top: 2px; }
+.manifest-note strong { color: var(--text); }
+
+/* ────────────────────────────────────────────
+   FAQ
+──────────────────────────────────────────── */
+.faq-list { display: flex; flex-direction: column; gap: 3px; }
+.faq-item {
+  background: var(--surf); border: 1px solid var(--line);
+  border-radius: 11px; overflow: hidden; transition: border-color .2s;
+}
+.faq-item.open { border-color: var(--line2); }
+.faq-q {
+  padding: 14px 18px; font-size: 14px; font-weight: 600; color: var(--text);
+  cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  user-select: none;
+}
+.faq-arrow {
+  width: 9px; height: 9px; flex-shrink: 0;
+  border-right: 2px solid var(--text3); border-bottom: 2px solid var(--text3);
+  transform: rotate(45deg); transition: transform .22s; margin-top: -4px;
+}
+.faq-item.open .faq-arrow { transform: rotate(-135deg); margin-top: 4px; }
+.faq-a {
+  max-height: 0; overflow: hidden; transition: max-height .28s ease, padding .28s ease;
+  padding: 0 18px; font-size: 13.5px; color: var(--text2); line-height: 1.7;
+}
+.faq-item.open .faq-a { max-height: 300px; padding: 0 18px 16px; }
+
+/* ────────────────────────────────────────────
+   CORS SECTION
+──────────────────────────────────────────── */
+.cors-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ────────────────────────────────────────────
+   FOOTER
+──────────────────────────────────────────── */
+.site-footer {
+  padding: 36px 0; border-top: 1px solid var(--line); margin-top: 80px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+}
+.footer-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+.footer-brand-logo {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: linear-gradient(135deg, #1a0404, #280808);
+  border: 1px solid #3a1010; display: flex; align-items: center; justify-content: center;
+}
+.footer-brand-logo svg { width: 14px; height: 14px; color: var(--red); }
+.footer-text { font-size: 12px; color: var(--text3); }
+.footer-a { color: var(--text3); text-decoration: none; transition: color .15s; }
+.footer-a:hover { color: var(--text2); }
+.footer-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.footer-links { display: flex; gap: 16px; }
+.footer-note { font-size: 11px; color: var(--text4); font-family: var(--sans); }
+
+/* ────────────────────────────────────────────
+   RESPONSIVE
+──────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .hero { padding: 64px 0 52px; }
+  .what-grid, .compare-grid, .cors-grid, .feat-grid { grid-template-columns: 1fr; }
+  .feat-grid { grid-template-columns: 1fr 1fr; }
+  .hero-stats { flex-direction: column; }
+  .hero-stat { border-right: none; border-bottom: 1px solid var(--line2); }
+  .hero-stat:last-child { border-bottom: none; }
+  .nav-a { display: none; }
+  body { cursor: auto; }
+  #cur-dot,#cur-ring { display: none; }
+}
+@media (max-width: 480px) {
+  .feat-grid { grid-template-columns: 1fr; }
+}
+
+/* reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .rev,.rev-l,.rev-r { transition: none; opacity: 1; transform: none; }
+  #circuit-canvas { display: none; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="circuit-canvas"></canvas>
+<canvas id="rain-canvas"></canvas>
+<div id="cur-glow"></div>
+<div id="cur-dot"></div>
+<div id="cur-ring"></div>
+<canvas id="cursor-particles"></canvas>
+
+<div class="wrap">
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <a class="brand" href="#">
+    <div class="brand-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">ESP Flash Button</div>
+      <div class="brand-tag">by SKR Electronics Lab</div>
+    </div>
+  </a>
+  <nav class="nav">
+    <a class="nav-a" href="#usage">Usage</a>
+    <a class="nav-a" href="#features">Features</a>
+    <a class="nav-a" href="#serial-monitor">Serial Monitor</a>
+    <a class="nav-a" href="#compare">Compare</a>
+    <a class="nav-a" href="#faq">FAQ</a>
+    <a class="nav-cta" href="https://skrelectronicslab.com" target="_blank" rel="noopener">SKR Lab</a>
+  </nav>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-eyebrow">
+    <span class="hero-eyebrow-dot"></span>
+    Free &amp; Open Source &nbsp;·&nbsp; v1.0 &nbsp;·&nbsp; Powered by <span style="color:#e03030;font-weight:600;">esp-flash-button</span>
+  </div>
+
+  <h1 class="hero-h1">
+    Flash ESP32 firmware<br><span class="accent">directly from the browser</span>
+  </h1>
+
+  <p class="hero-sub">
+    One script tag. One custom element. Your users flash ESP32, ESP8266, and ESP32-S3 devices in seconds — no boot button, no IDE, no drivers, no server uploads.
+  </p>
+
+  <div class="hero-stats rev">
+    <div class="hero-stat"><div class="hero-stat-val red">921K</div><div class="hero-stat-lbl">baud flash speed</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">&lt;15s</div><div class="hero-stat-lbl">for 2 MB firmware</div></div>
+    <div class="hero-stat"><div class="hero-stat-val grn">MD5</div><div class="hero-stat-lbl">verified every write</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">8</div><div class="hero-stat-lbl">chip families</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">0</div><div class="hero-stat-lbl">server uploads</div></div>
+  </div>
+
+  <div class="hero-ctas rev">
+    <a class="btn-primary" href="#usage">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Get started
+    </a>
+    <a class="btn-ghost" href="#serial-monitor">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      Try Serial Monitor
+    </a>
+  </div>
+
+  <!-- Demo button block -->
+  <div class="demo-wrap rev">
+    <div class="demo-header">
+      <div class="demo-dots">
+        <div class="demo-dot demo-dot-r"></div>
+        <div class="demo-dot demo-dot-y"></div>
+        <div class="demo-dot demo-dot-g"></div>
+      </div>
+      <div class="demo-title">esp-flash-button — live demo</div>
+      <div style="width:60px;"></div>
+    </div>
+    <div class="demo-body">
+      <div class="demo-live-label">
+        <span class="demo-live-dot"></span>
+        Interactive demo &mdash; connect a real device to flash
+      </div>
+
+      <div class="demo-btn-row">
+        <esp-flash-button manifest="demo-manifest.json" label="Install Demo Firmware"></esp-flash-button>
+      </div>
+
+      <div class="demo-themes-section">
+        <div class="demo-themes-label">Flasher modal theme — dark vs light (click to open)</div>
+        <div class="demo-modal-row">
+          <div class="demo-modal-card">
+            <span class="demo-theme-name">Dark Theme</span>
+            <esp-flash-button manifest="demo-manifest.json" label="Flash (Dark)" theme="red"></esp-flash-button>
+          </div>
+          <div class="demo-modal-card">
+            <span class="demo-theme-name">Light Theme</span>
+            <esp-flash-button manifest="demo-manifest.json" label="Flash (Light)" theme="light"></esp-flash-button>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-themes-section">
+        <div class="demo-themes-label">All button themes — each has a unique visual style</div>
+        <div class="demo-theme-grid">
+          <div class="demo-theme-card"><span class="demo-theme-name">Red</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="red"></esp-flash-button></div>
+          <div class="demo-theme-card"><span class="demo-theme-name">Dark</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="dark"></esp-flash-button></div>
+          <div class="demo-theme-card"><span class="demo-theme-name">Green</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="green"></esp-flash-button></div>
+          <div class="demo-theme-card"><span class="demo-theme-name">Light</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="light"></esp-flash-button></div>
+          <div class="demo-theme-card"><span class="demo-theme-name">Ghost</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="ghost"></esp-flash-button></div>
+          <div class="demo-theme-card"><span class="demo-theme-name">Minimal</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="minimal"></esp-flash-button></div>
+        </div>
+      </div>
+
+      <div class="demo-themes-section">
+        <div class="demo-themes-label">Numeric button sizing — pass any number directly (e.g. size="14", size="18", size="22")</div>
+        <div class="demo-theme-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: center;">
+          <div class="demo-theme-card"><span class="demo-theme-name">Mini &middot; size="12"</span><esp-flash-button manifest="demo-manifest.json" label="Flash" theme="light" size="12"></esp-flash-button></div>
+          <div class="demo-theme-card"><span class="demo-theme-name">Standard &middot; size="14.5"</span><esp-flash-button manifest="demo-manifest.json" label="Install Firmware" theme="light" size="14.5"></esp-flash-button></div>
+          <div class="demo-theme-card"><span class="demo-theme-name">Prominent &middot; size="18"</span><esp-flash-button manifest="demo-manifest.json" label="Install Firmware" theme="light" size="18"></esp-flash-button></div>
+          <div class="demo-theme-card"><span class="demo-theme-name">Hero &middot; size="22"</span><esp-flash-button manifest="demo-manifest.json" label="Install Firmware" theme="red" size="22"></esp-flash-button></div>
+        </div>
+
+        <div style="margin-top:20px; background:var(--surf); border:1px solid var(--line2); border-radius:12px; padding:20px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+            <div>
+              <div style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:3px;">Interactive Button Customizer &amp; Size Playground</div>
+              <div style="font-size:11.5px; color:var(--text3);">Drag slider to test any exact size in real time, customize width &amp; theme</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span id="custom-size-badge" style="font-family:var(--mono); font-size:12px; color:var(--red); font-weight:700; background:var(--surf2); border:1px solid var(--line2); padding:4px 10px; border-radius:6px;">size="18"</span>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px; flex-wrap:wrap;">
+            <label style="font-size:12px; color:var(--text2); display:flex; align-items:center; gap:10px; flex:1; min-width:200px;">
+              <span>Size:</span>
+              <input type="range" id="size-slider" min="11" max="28" value="18" step="1" style="flex:1; accent-color:var(--red); cursor:pointer;">
+            </label>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button type="button" class="custom-theme-btn active" data-theme="red" style="padding:4px 10px; font-size:11px; border-radius:6px; background:var(--surf3); border:1px solid var(--red); color:var(--text); cursor:pointer;">Red</button>
+              <button type="button" class="custom-theme-btn" data-theme="dark" style="padding:4px 10px; font-size:11px; border-radius:6px; background:var(--surf2); border:1px solid var(--line); color:var(--text3); cursor:pointer;">Dark</button>
+              <button type="button" class="custom-theme-btn" data-theme="green" style="padding:4px 10px; font-size:11px; border-radius:6px; background:var(--surf2); border:1px solid var(--line); color:var(--text3); cursor:pointer;">Green</button>
+              <button type="button" class="custom-theme-btn" data-theme="light" style="padding:4px 10px; font-size:11px; border-radius:6px; background:var(--surf2); border:1px solid var(--line); color:var(--text3); cursor:pointer;">Light</button>
+            </div>
+            <label style="font-size:11.5px; color:var(--text2); display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="checkbox" id="size-fullwidth-chk" style="accent-color:var(--red);">
+              <span>Full width</span>
+            </label>
+          </div>
+
+          <div style="min-height:90px; display:flex; align-items:center; justify-content:center; background:var(--surf2); border-radius:10px; padding:20px; border:1px dashed var(--line2); margin-bottom:14px;" id="playground-btn-container">
+            <esp-flash-button id="playground-btn" manifest="demo-manifest.json" label="Install Firmware" theme="red" size="18"></esp-flash-button>
+          </div>
+
+          <div class="code-wrap" style="margin:0;">
+            <pre id="playground-code" style="padding:10px 14px; font-size:11.5px; border-radius:8px;">&lt;esp-flash-button manifest="https://yoursite.com/manifest.json" size="18" theme="red"&gt;&lt;/esp-flash-button&gt;</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── AI PROMPT (moved to top for easy access) ── -->
+<section class="section rev" id="ai-prompt">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="tag">AI Assistant</div>
+      <h2 class="section-h">Give this full context to any AI</h2>
+      <p class="section-sub">Copy the complete technical specification below and paste it to ChatGPT, Claude, Gemini, or any AI before asking coding or troubleshooting questions about this project.</p>
+    </div>
+    <div class="ai-section">
+      <div class="ai-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 0-4 4v1H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4zm-2 4a2 2 0 1 1 4 0v1h-4V6zm-2 7a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1z"/></svg>
+        <div class="ai-title">ESP Flash Button — Complete Project Specification</div>
+      </div>
+      <div class="ai-desc">
+        This prompt contains the full technical specification. Paste into any AI before asking coding or troubleshooting questions.
+      </div>
+      <div class="ai-prompt-box" id="ai-prompt-text">ESP Flash Button is a free, open-source, single-file web component (IIFE pattern, ~2280+ lines) that lets website visitors flash ESP32/ESP8266/ESP32-S3 microcontrollers directly from the browser using the Web Serial API and esptool-js (loaded dynamically from unpkg CDN). No build step, no npm, no framework required. Deployed on Cloudflare Pages at esp-flash-button.pages.dev.
+
+ARCHITECTURE:
+- Shadow DOM used ONLY for the trigger button; the modal dialog and serial monitor are injected into document.body
+- CSS variables for full theming: dark theme by default, light theme override via :root[data-theme="light"]
+- All CSS variables are defined on :root, .__efb-overlay, .__efb-sm-overlay, .__efb-sm-modal, and .__efb-modal selectors for reliable inheritance
+- esptool-js loaded on first click (lazy import from unpkg), stored in module-level cache
+- MD5 implementation built-in (RFC 1321, Paul Johnston/blueimp) for firmware verification
+- No telemetry, no tracking, no server uploads — fully local flashing
+
+ATTRIBUTES (observed by the component):
+  manifest (required) — Absolute URL to firmware manifest JSON. Must be served with CORS headers.
+  label — Button label text (default: "Install Firmware"). Ignored when using slotted custom button via [slot="activate"].
+  theme — Button visual style. One of: red, dark, green, light, ghost, minimal. (default: "red")
+  erase-first — Boolean attribute. When present, erases all flash before writing. Also togglable as a checkbox in UI.
+  baud — Flash baud rate (default: 460800). Max 921600. Automatically reduced to 115200 for ESP8266/ESP8285 to prevent brownout.
+
+BUTTON THEMES (Shadow DOM CSS — SHADOW_CSS const):
+  red (default): Bold pill shape, border-radius 100px, linear-gradient(135deg,#e03030,#b81f1f), font-weight 700, box-shadow 0 2px 12px rgba(224,48,48,0.35)
+  dark: Rectangular, border-radius 6px, 2px solid #2a2a2e border, linear-gradient(135deg,#1a1a1e,#111114), font-weight 600
+  green: Rounded, border-radius 12px, linear-gradient(135deg,#1a8c4e,#15703e), box-shadow ring 0 0 0 1px rgba(61,214,140,0.15), font-weight 600
+  light: Compact, border-radius 8px, linear-gradient(135deg,#3b82f6,#1d4ed8), font-size 13px font-weight 500
+  ghost: Dashed outline, border 1.5px dashed rgba(224,48,48,0.5), transparent background, red text, font-weight 500
+  minimal: Small underlined text, border-radius 4px, padding 6px 12px, font-size 12px font-weight 400, color #888 with underline, hover turns red
+  All themes share: transition on transform/box-shadow/background, hover lift effect, disabled state with opacity 0.45, ripple animation on click, spinner during loading
+
+MODAL CSS — COMPLETE VARIABLE SYSTEM (_getModalCSS method, returns CSS string injected into document.head):
+  Dark theme defined on :root + overlay/modal selectors. Light theme via :root[data-theme="light"] override.
+  
+  LAYOUT: .__efb-overlay (fixed inset, z-index 2147483646, flex center, backdrop-filter blur 8px), .__efb-modal (500px wide, max-height 90vh, border-radius 18px, slide-up animation)
+  
+  HEADER: .__efb-header (flex row, 18px 20px padding, border-bottom), .__efb-hicon (40px, border-radius 10px, gradient bg), .__efb-htitle (15px, font-weight 700), .__efb-hsub (11px, lower opacity), .__efb-hclose (30px, border-radius 7px, hover effects)
+  
+  BODY: .__efb-body (padding 18px 20px, overflow-y auto, flex column gap 12px, thin scrollbar)
+  
+  FOOTER: .__efb-footer (padding 10px 20px, flex space-between), .__efb-credit (10px), .__efb-btnrow (flex gap 8px, wrap, justify-end)
+  
+  BUTTONS: .__efb-btn (default: inline-flex, gap 6px, padding 8px 16px, border-radius 8px, font 13px font-weight 600), .__efb-btn.primary (accent gradient + shadow), .__efb-btn.ghost (transparent with border), .__efb-btn.success-btn (green gradient), .__efb-btn.change-port-btn (minimal), .__efb-btn.serial-btn (accent colored border)
+  
+  FIRMWARE CARD: .__efb-fwcard-wrap (border-radius 12px, padding 14px 16px, flex column), .__efb-fwicon (36px, border-radius 9px, gradient), .__efb-fwname (14px, font-weight 600), .__efb-fwmeta (11px), .__efb-fwbadge (10px, green pill)
+  
+  VARIANTS: .__efb-vlabel (10px, uppercase), .__efb-vchip (chip selector, padding 5px 12px, border-radius 7px, .selected state with accent border), .__efb-vchip.detected (green border)
+  
+  STATUS: .__efb-srow (flex row, padding 11px 14px, border-radius 10px), .__efb-sdot (7px dot, states: green/red/amber with glow animations), .__efb-stext (13px)
+  
+  CHIP PILLS: .__efb-pills (flex wrap, gap 7px), .__efb-pill (border-radius 20px, padding 4px 10px, .hi .pv state)
+  
+  PROGRESS: .__efb-prog (border-radius 10px, padding 12px, flex column), .__efb-prog-track (height 4px, border-radius 100px), .__efb-prog-fill (gradient, width animated via JS), .__efb-prog-fill.done (turns green)
+  
+  LOG: .__efb-log (border-radius 9px, font JetBrains Mono 11px, padding 10px 12px, max-height 140px), .__efb-ll types: info/success/warn/error/accent/dim
+  
+  SUCCESS: .__efb-succ (border-radius 10px), .__efb-checkmark SVG with stroke-dasharray animation, .__efb-succ-meta (chip, flash size, duration, file count), .__efb-succ-md5 (per-file MD5 hashes)
+  
+  ERROR: .__efb-errbox (red-tinted background, border-radius 10px), .__efb-errtitle (bold red), .__efb-errhints list
+  
+  CHECKBOX: .__efb-checkrow (flex row, border-radius 9px, cursor pointer), .__efb-checkbox (16px, border-radius 4px, .checked state with accent gradient fill)
+  
+  SERIAL MONITOR LINK: .__efb-sm-row (flex row, 11px font, hover effects with purple-ish tint)
+  
+  SERIAL MONITOR MODAL: .__efb-sm-overlay (z-index 2147483647, backdrop-filter blur 8px), .__efb-sm-modal (560px wide, 520px height, max-height 90vh, border-radius 16px)
+    Header: .__efb-sm-hicon (34px, rounded 8px, green icon), .__efb-sm-htitle (14px, font-weight 700), .__efb-sm-hsub (11px, green, dot indicator), .__efb-sm-hclose (28px, rounded 7px)
+    Toolbar: .__efb-sm-toolbar (flex row, padding 8px 18px, border-bottom), .__efb-sm-label (10px, uppercase), .__efb-sm-select (baud/line-ending selector), .__efb-sm-tbtn (tool buttons: DTR, RST, Clear), .__efb-sm-tbtn.active (green), .__efb-sm-tbtn-clear (red-tinted)
+    Output: .__efb-sm-output (flex 1, overflow-y auto, font JetBrains Mono 11.5px, line-height 1.7, background bg), .__efb-sm-line types: .rx (received data, #c0c8d0), .tx (transmitted, #f59e0b amber), .sys (system, #404048 italic), .err (error, #e05050 red)
+    Input row: .__efb-sm-input-row (flex, padding 12px 16px), .__efb-sm-input (flex 1, rounded 8px, dark bg), .__efb-sm-send (red gradient button)
+    Footer: .__efb-sm-footer (flex space-between, padding 8px 16px), .__efb-sm-count (10px, monospace)
+  
+  CSS VARIABLE NAMES (complete list): --efb-overlay, --efb-modal-bg, --efb-text, --efb-text2, --efb-text3, --efb-text4, --efb-text5, --efb-border, --efb-border2, --efb-border3, --efb-border4, --efb-surface, --efb-surface2, --efb-surface3, --efb-surface4, --efb-surface5, --efb-accent (#e03030), --efb-accent-dark (#b81f1f), --efb-accent-hover (#ff4a40), --efb-accent-dark2 (#a01a1a), --efb-accent-bg, --efb-accent-border, --efb-accent-shadow, --efb-accent-shadow2, --efb-green (#3dd68c), --efb-green-bg, --efb-green-border, --efb-green-glow, --efb-amber (#f59e0b), --efb-amber-glow, --efb-error (#e05050), --efb-error-border, --efb-error-bg, --efb-ghost-bg, --efb-ghost-border, --efb-ghost-hover-bg, --efb-ghost-hover-text, --efb-ghost-hover-border, --efb-ghost-text, --efb-ghost-cp-text, --efb-ghost-cp-border, --efb-ghost-cp-hover-text, --efb-ghost-cp-hover-border, --efb-ghost-cp-hover-bg, --efb-log-bg, --efb-log-border, --efb-log-scroll, --efb-pill-bg, --efb-pill-border, --efb-pill-pl, --efb-pill-pv, --efb-prog-bg, --efb-prog-border, --efb-prog-txt, --efb-prog-track, --efb-prog-fill, --efb-prog-fill-done, --efb-success-bg, --efb-success-border, --efb-succ-title, --efb-succ-sub, --efb-succ-meta, --efb-succ-meta-span, --efb-succ-meta-dot, --efb-succ-md5-border, --efb-succ-md5-title, --efb-succ-md5-file, --efb-succ-md5-addr, --efb-succ-md5-hash, --efb-scrollbar, --efb-check-bg, --efb-check-border, --efb-checklabel, --efb-fwcard-bg, --efb-fwcard-border, --efb-fwicon-bg, --efb-fwicon-border, --efb-fwicon-color, --efb-fwcredit-border, --efb-fwcredit-text, --efb-fwcredit-link, --efb-fwcredit-hover, --efb-fwname, --efb-fwmeta, --efb-errtext, --efb-errhint-text, --efb-errhint-prefix, --efb-vlabel, --efb-vchip-bg, --efb-vchip-border, --efb-vchip-text, --efb-vchip-hover-border, --efb-vchip-hover-text, --efb-sm-overlay, --efb-sm-bg, --efb-sm-border, --efb-sm-shadow, --efb-sm-header-border, --efb-sm-toolbar-border, --efb-sm-label, --efb-sm-select-bg, --efb-sm-select-border, --efb-sm-select-text, --efb-sm-select-hover-border, --efb-sm-select-hover-text, --efb-sm-input-border, --efb-sm-input-bg, --efb-sm-input-text, --efb-sm-input-placeholder, --efb-sm-input-focus-border, --efb-sm-tbtn-bg, --efb-sm-tbtn-border, --efb-sm-tbtn-text, --efb-sm-tbtn-hover-text, --efb-sm-tbtn-hover-border, --efb-sm-tbtn-hover-bg, --efb-sm-tbtn-clear, --efb-sm-tbtn-clear-border, --efb-sm-tbtn-clear-hover, --efb-sm-tbtn-clear-hover-border, --efb-sm-tbtn-clear-hover-bg, --efb-sm-output-bg, --efb-sm-output-scroll, --efb-sm-line-rx, --efb-sm-line-tx, --efb-sm-line-sys, --efb-sm-line-err, --efb-sm-empty, --efb-sm-input-row-bg, --efb-sm-input-row-border, --efb-sm-footer-bg, --efb-sm-footer-border, --efb-sm-footer-credit, --efb-sm-footer-link, --efb-sm-count, --efb-htitle, --efb-hsub, --efb-hclose-bg, --efb-hclose-text, --efb-hclose-hover-bg, --efb-hclose-hover-text, --efb-hicon-bg, --efb-hicon-border, --efb-hicon-color, --efb-credit-text, --efb-credit-link, --efb-credit-hover, --efb-stext, --efb-stext-strong, --efb-sdot, --efb-sm-hicon-bg, --efb-sm-hicon-border, --efb-sm-hicon-color, --efb-sm-htitle, --efb-sm-hsub, --efb-sm-hclose-bg, --efb-sm-hclose-text, --efb-sm-hclose-hover-bg, --efb-sm-hclose-hover-text, --efb-sm-footer-credit, --efb-sm-footer-link, --efb-sm-send-bg, --efb-sm-send-hover-bg, --efb-sm-send-text, --efb-sm-dot-bg, --efb-sm-dot-glow, --efb-sm-row-border, --efb-sm-row-bg, --efb-sm-row-text, --efb-sm-row-hover-border, --efb-sm-row-hover-bg, --efb-sm-row-hover-text
+
+LIGHT THEME OVERRIDE: All vars redefined under :root[data-theme="light"] with lighter values (white modal bg, slate text, blue accent, light borders). Applied by setting data-theme="light" on the overlay and propagating to :root.
+
+SERIAL MONITOR — FULL SPECIFICATION:
+  Opens from success panel after flash, or from serial monitor link row after chip detection
+  When opening: hides main modal overlay (display:none), propagates data-theme to :root, creates separate .__efb-sm-overlay at z-index 2147483647
+  BAUD SELECTION: dropdown with options 9600, 19200, 38400, 57600, 74880, 115200 (default), 230400, 460800, 921600. Changing baud stops and restarts read loop.
+  LINE ENDINGS: None, CR+LF (default), LF, CR
+  DTR TOGGLE: Toggles Data Terminal Ready signal. Shows [DTR ON/OFF] in output.
+  RST BUTTON: Sends DTR+RTS pulse sequence (DTR high, 100ms, RTS high, 50ms, both low) — triggers hardware reset on most ESP32 boards. Shows [RST pulse sent] in output.
+  CLEAR: Removes all output lines, resets line counter.
+  SEND: TextEncoder writes value + selected EOL to serial writable stream. Prefixed with "> " in output.
+  READ LOOP: Uses ReadableStream getReader() with TextDecoder stream mode, buffers partial lines, splits on newlines, limits to 500 lines in DOM. Handles errors gracefully with [Read error] messages.
+  PORT MANAGEMENT: On close, cancels reader, releases writer lock, closes port. On reconnect for flash, waits 200ms, force-closes port, explicitly re-opens at detect baud.
+  LINE COUNT: tracks total lines displayed, shown in footer
+
+FLASH SEQUENCE — COMPLETE FLOW:
+  1. User clicks button -> _onButtonClick -> _openModal
+  2. _openModal: injects CSS into head, creates overlay+modal, calls _loadManifest
+  3. _loadManifest: fetches manifest JSON, validates "builds" array, calls _showReadyPanel
+  4. _showReadyPanel: renders firmware card, erase checkbox, status row, footer with Cancel + Connect
+  5. _connectAndFlash: navigator.serial.requestPort(), port disconnect listener, calls _detectChip
+  6. _detectChip: creates Transport + ESPLoader, calls loader.main() for chip detection, flash_id for size, auto-selects variant, shows _showFlashConfirm
+  7. _showFlashConfirm: resolves build flashSettings (mode/freq/size/baud/erase/compress), shows Flash Firmware button + Serial Monitor link + "Flash settings" strip, stores detect state
+  8. _executeFlash: fetches all .bin files, reconnects at the resolved baud if needed, calls loader.writeFlash({flashMode, flashFreq, flashSize, eraseAll, compress}) with progress callback, MD5 calculation, hard reset
+  9. _showSuccess: displays checkmark animation, chip info, MD5 hashes, footer with Monitor + Close + Refresh buttons
+  10. Confetti celebration animation plays (80 particles flying outward from center with random colors)
+
+RECONNECTION LOGIC: After serial monitor closes, _reconnectForFlash() disconnects transport, waits 200ms, force-closes port, re-opens at detect baud, creates new Transport+ESPLoader, re-runs loader.main() for bootloader re-entry. Handles ESP8266 baud reduction.
+
+ERROR HANDLING: Connection failed, port selection cancelled, flash aborted by user, fetch failure, write failure. Each shows specific error box with troubleshooting hints. DOM events flash-success and flash-error dispatched.
+
+CELEBRATION: After flash success, 80 confetti particles burst from center with randomized: angle, distance (100-350px), color (red/green/amber/blue/purple/pink/cyan), size (4-12px), shape (circle or square), delay (0-0.3s), duration (0.6-1.2s). Particles fly outward with rotation and fade.
+
+BUTTON RIPPLE: All .__efb-btn clicks trigger a ripple effect (white circle scales from 0 to 4x with fade, 0.5s animation, then removed).
+
+MANIFEST JSON FORMAT:
+  {
+    "name": "Firmware Name",
+    "version": "1.0.0",
+    "description": "Optional description",
+    "newImage": true/false,
+    "flashSettings": { "mode": "dio", "freq": "40m", "baud": 460800, "compress": true },
+    "builds": [
+      {
+        "chipFamily": "ESP32",
+        "flashSettings": { "mode": "qio", "freq": "80m" },
+        "parts": [{"path": "firmware.bin", "offset": 0}]
+      }
+    ]
+  }
+  chipFamily values: ESP32, ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6, ESP32-H2, ESP8266, ESP8285
+  Multi-chip manifests auto-select build matching detected chip family.
+  ESP8266/8285 automatically limited to 115200 baud.
+
+MANIFEST FLASH SETTINGS (flashSettings, per-firmware control of how flashing happens):
+  Supported keys (nested flashSettings object AND flat legacy keys both work):
+    mode       — "keep" (default) | "qio" | "qout" | "dio" | "dout" — SPI flash mode. qio/qout fastest; dio/dout for modules with limited wiring or old flash chips.
+    freq       — "keep" (default) | "80m" | "40m" | "26m" | "20m" — flash clock frequency.
+    flashSize  — "detect" (default) | "keep" | "256KB" | "512KB" | "1MB" | "2MB" | "4MB" | "8MB" | "16MB" — override auto-detected size.
+    baud       — optional serial baud override (positive int). Capped at 115200 for ESP8266/8285.
+    erase      — true | false | (omit) — force/default the erase toggle state; omitted keeps user control.
+    compress   — true (default) | false — hardware compression during transfer.
+  Aliases: flashMode/flash_mode, flashFreq/flash_frequency, flashSize/flash_size, eraseAll.
+  Precedence (most specific wins): build.flashSettings > manifest.flashSettings > component attributes (baud, erase-first) > defaults.
+  Invalid values silently fall back to safe defaults (mode→keep, freq→keep, flashSize→detect).
+  Resolved settings are shown to the user as a "Flash settings" strip in the confirm dialog and logged before writing.
+  If a build's flashSettings.baud differs from the detection baud, the component auto-reconnects at the new baud before writing.
+
+DOM EVENTS: flash-success (detail: {chip, flashSize, duration, filesCount}), flash-error (detail: {title, message}). Both bubble and composed.
+
+SUPPORTED USB-SERIAL CHIPS: CP2102, CP2104, CH340, CH341, FTDI FT232R, CDC-ACM. Requires Chrome 89+/Edge 89+/Opera 76+ on desktop.
+
+DEPLOYMENT: wrangler pages deploy . --project-name esp-flash-button --branch main. Production URL: esp-flash-button.pages.dev. Script loaded from: https://esp-flash-button.pages.dev/esp-flash-button.js
+
+LANDING PAGE: index.html at project root. Contains hero, demo (live component + theme cards), AI prompt section, usage guide, features grid, serial monitor simulation (with animated boot sequence + live output), comparison table, FAQ accordion, supported chips, CORS setup guide. Includes custom cursor with trailing particles, circuit board background animation, scroll-reveal animations, code copy buttons.
+
+MODAL THEME: When button theme="light" is used, the modal and serial monitor render with a light theme (white backgrounds, blue accent #3b82f6, slate text). All other button themes (red/dark/green/ghost/minimal) use the dark modal theme (dark backgrounds, red accent #e03030). The modal theme switch is controlled by data-theme="light" on the overlay element, which triggers CSS variable overrides in the :root[data-theme="light"] section.
+
+DEMO SECTION: Landing page demo shows both modal themes side by side — "Dark Theme" (theme="red" button) and "Light Theme" (theme="light" button). Users can click either to see the flasher modal in dark or light mode.
+
+ANTI-COPY: JS is obfuscated via javascript-obfuscator (control flow flattening, dead code injection, self-defending, string array with base64 encoding, mangled identifiers, object key transformation) into dist/esp-flash-button.js (231KB). Source at root/esp-flash-button.js (113KB). Copy event blocked on non-code elements. The dist/ folder contains all production files.
+
+DEPLOYMENT: `wrangler pages deploy dist --project-name esp-flash-button --branch main`. The dist/ folder contains the complete production build (obfuscated JS, index.html, demo-manifest.json, _headers, _redirects). Root folder contains source files for development.</div>
+      <div class="ai-copy-row">
+        <button class="ai-copy-btn" id="ai-copy-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy prompt
+        </button>
+        <span class="ai-copy-note" id="ai-copy-msg">Click to copy the full project specification</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── WHAT IS IT ── -->
+<section class="section rev" id="about">
+  <div class="section-head">
+    <div class="tag">What is ESP Flash Button</div>
+    <h2 class="section-h">The easiest way to let users flash your ESP firmware</h2>
+    <p class="section-sub">An embeddable browser firmware installer built on the Web Serial API. No software installation, no IDE, no USB driver configuration.</p>
+  </div>
+  <div class="what-grid">
+    <div class="what-card">
+      <div class="wc-icon ic-red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <div class="wc-title">Built for makers and product teams</div>
+      <div class="wc-desc">Whether you sell dev boards, run a tutorial blog, or distribute firmware for your open-source project — embed the installer and let your users flash in one click. No build toolchain, no CDN account, no deployment pipeline.</div>
+    </div>
+    <div class="what-card">
+      <div class="wc-icon ic-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="wc-title">100% private — local by design</div>
+      <div class="wc-desc">Firmware files are fetched from your own server and written directly to the device in the browser. No data ever passes through a third-party server. Zero telemetry. Zero tracking. The device and your firmware never leave the user's machine.</div>
+    </div>
+    <div class="what-card">
+      <div class="wc-icon ic-blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
+      <div class="wc-title">Works everywhere on the modern web</div>
+      <div class="wc-desc">A standard HTML web component. Deploy on WordPress, Ghost, GitHub Pages, Cloudflare Pages, or any static site host. No npm, no build step, no framework. One script tag and one custom element is all you need.</div>
+    </div>
+    <div class="what-card">
+      <div class="wc-icon ic-amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      </div>
+      <div class="wc-title">Significantly faster than alternatives</div>
+      <div class="wc-desc">921600 baud flash speed with hardware compression. Automatic MD5 verification. Chip + MAC + flash size auto-detection. A 2 MB firmware completes in under 15 seconds — up to 10x faster than legacy browser tools running at 115200 baud.</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="section-head rev">
+      <div class="tag">How it works</div>
+      <h2 class="section-h">From click to flashed firmware in under 15 seconds</h2>
+      <p class="section-sub">The entire flash process runs in the browser — no server, no relay, no middleman.</p>
+    </div>
+    <div class="timeline rev">
+      <div class="tl-step">
+        <div class="tl-num">01</div>
+        <div class="tl-content">
+          <div class="tl-title">User clicks the button</div>
+          <div class="tl-desc">A modal opens showing firmware name, version, supported chip variants, and erase options. The user selects their ESP board from the browser's native serial port picker dialog. No configuration required.</div>
+        </div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-num">02</div>
+        <div class="tl-content">
+          <div class="tl-title">Chip detection via bootloader</div>
+          <div class="tl-desc">The SKR Flasher engine enters bootloader mode automatically via DTR/RTS signals — no BOOT button hold needed on standard boards. It identifies the chip family (ESP32 / ESP32-S3 / ESP8266), reads the MAC address, and detects installed flash size. The correct firmware variant from your manifest is auto-selected.</div>
+        </div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-num">03</div>
+        <div class="tl-content">
+          <div class="tl-title">Firmware download and write</div>
+          <div class="tl-desc">Firmware .bin files are fetched from your server, compressed in-browser, and written to flash memory with real-time progress and ETA. Every byte is verified with MD5 after writing — the hash is displayed in the success screen so users can confirm integrity.</div>
+        </div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-num">04</div>
+        <div class="tl-content">
+          <div class="tl-title">Hard reset and success</div>
+          <div class="tl-desc">The device is hard-reset via RTS to exit bootloader mode and boot the new firmware. A success screen shows chip info, flash duration, file count, and per-file MD5 hashes. From there, users can open the built-in Serial Monitor to verify their firmware is running correctly.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── QUICK START ── -->
+<section class="section rev" id="usage">
+  <div class="section-head">
+    <div class="tag">Quick start</div>
+    <h2 class="section-h">Two lines of code</h2>
+    <p class="section-sub">Drop these into any HTML page. No build step, no npm, no framework required.</p>
+  </div>
+  <div class="usage-steps">
+
+    <div class="usage-step">
+      <div class="step-badge">1</div>
+      <div class="step-body">
+        <div class="step-title">Add the script tag</div>
+        <div class="step-desc">Load the component from Cloudflare CDN. One tag, zero dependencies, works in any HTML context.</div>
+        <div class="code-wrap">
+          <pre><span class="c-com">&lt;!-- Add once, anywhere in your page --&gt;</span>
+<span class="c-tag">&lt;script</span> <span class="c-attr">src</span>=<span class="c-str">"https://esp-flash-button.pages.dev/esp-flash-button.js"</span><span class="c-tag">&gt;&lt;/script&gt;</span></pre>
+          <button class="cpy-btn" onclick="doCopy(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="usage-step">
+      <div class="step-badge">2</div>
+      <div class="step-body">
+        <div class="step-title">Place the button element</div>
+        <div class="step-desc">Add the custom element wherever you want the flash button to appear. Point it at your firmware manifest JSON.</div>
+        <div class="code-wrap">
+          <pre><span class="c-tag">&lt;esp-flash-button</span>
+  <span class="c-attr">manifest</span>=<span class="c-str">"https://yoursite.com/firmware/manifest.json"</span>
+  <span class="c-attr">label</span>=<span class="c-str">"Install My Firmware"</span>
+  <span class="c-attr">theme</span>=<span class="c-str">"red"</span><span class="c-tag">&gt;</span>
+<span class="c-tag">&lt;/esp-flash-button&gt;</span></pre>
+          <button class="cpy-btn" onclick="doCopy(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="usage-step">
+      <div class="step-badge">3</div>
+      <div class="step-body">
+        <div class="step-title">Choose a button theme (optional)</div>
+        <div class="step-desc">Five built-in themes via the <code class="inline">theme</code> attribute: <code class="inline">red</code> (default), <code class="inline">dark</code>, <code class="inline">green</code>, <code class="inline">ghost</code>, and <code class="inline">minimal</code>. Or supply your own element with <code class="inline">slot="activate"</code>.</div>
+        <div class="code-wrap">
+          <pre><span class="c-com">&lt;!-- Five built-in themes --&gt;</span>
+<span class="c-tag">&lt;esp-flash-button</span> <span class="c-attr">manifest</span>=<span class="c-str">"..."</span> <span class="c-attr">theme</span>=<span class="c-str">"green"</span><span class="c-tag">&gt;&lt;/esp-flash-button&gt;</span>
+
+<span class="c-com">&lt;!-- Or bring your own button entirely --&gt;</span>
+<span class="c-tag">&lt;esp-flash-button</span> <span class="c-attr">manifest</span>=<span class="c-str">"..."</span><span class="c-tag">&gt;</span>
+  <span class="c-tag">&lt;button</span> <span class="c-attr">slot</span>=<span class="c-str">"activate"</span> <span class="c-attr">class</span>=<span class="c-str">"my-btn"</span><span class="c-tag">&gt;</span>Flash Firmware<span class="c-tag">&lt;/button&gt;</span>
+<span class="c-tag">&lt;/esp-flash-button&gt;</span></pre>
+          <button class="cpy-btn" onclick="doCopy(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="usage-step">
+      <div class="step-badge">4</div>
+      <div class="step-body">
+        <div class="step-title">Listen to flash events</div>
+        <div class="step-desc">React to success or failure with standard DOM events. Perfect for analytics, post-flash instructions, or confetti.</div>
+        <div class="code-wrap">
+          <pre><span class="c-tag">&lt;script&gt;</span>
+document.querySelector(<span class="c-str">'esp-flash-button'</span>)
+  .addEventListener(<span class="c-str">'flash-success'</span>, (e) =&gt; {
+    <span class="c-com">// e.detail = { chip, flashSize, duration, filesCount }</span>
+    console.log(<span class="c-str">'Flashed!'</span>, e.detail.chip, e.detail.duration + <span class="c-str">'s'</span>);
+  });
+
+document.querySelector(<span class="c-str">'esp-flash-button'</span>)
+  .addEventListener(<span class="c-str">'flash-error'</span>, (e) =&gt; {
+    console.error(e.detail.title, e.detail.message);
+  });
+<span class="c-tag">&lt;/script&gt;</span></pre>
+          <button class="cpy-btn" onclick="doCopy(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── MANIFEST ── -->
+<section class="section rev" id="manifest">
+  <div class="section-head">
+    <div class="tag">Manifest format</div>
+    <h2 class="section-h">Your firmware manifest</h2>
+    <p class="section-sub">A simple JSON file that tells the component what firmware to flash and for which chips. Host it on your server alongside your .bin files.</p>
+  </div>
+
+  <div class="manifest-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div>Your server must send <strong>CORS headers</strong> so the browser can fetch the manifest and firmware files cross-origin. Add <code class="inline">Access-Control-Allow-Origin: *</code> to your server responses on the manifest and all .bin paths.</div>
+  </div>
+
+  <div class="step-title" style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;">Single merged .bin — simplest, address 0x0</div>
+  <div class="code-wrap" style="margin-bottom:22px;">
+    <pre><span style="color:#444;">{</span>
+  <span class="c-attr">"name"</span>: <span class="c-str">"My ESP32 Project"</span>,
+  <span class="c-attr">"version"</span>: <span class="c-str">"1.0.0"</span>,
+  <span class="c-attr">"description"</span>: <span class="c-str">"Optional description shown in the flash dialog"</span>,
+  <span class="c-attr">"builds"</span>: [
+    <span style="color:#444;">{</span>
+      <span class="c-attr">"chipFamily"</span>: <span class="c-str">"ESP32"</span>,
+      <span class="c-attr">"parts"</span>: [
+        <span style="color:#444;">{</span> <span class="c-attr">"path"</span>: <span class="c-str">"firmware.bin"</span>, <span class="c-attr">"offset"</span>: <span class="c-num">0</span> <span style="color:#444;">}</span>
+      <span style="color:#444;">]</span>
+    <span style="color:#444;">}</span>
+  <span style="color:#444;">]</span>
+<span style="color:#444;">}</span></pre>
+    <button class="cpy-btn" onclick="doCopy(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy
+    </button>
+  </div>
+
+  <div class="step-title" style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;">Multi-chip with separate partitions — auto-detected</div>
+  <div class="code-wrap" style="margin-bottom:22px;">
+    <pre><span style="color:#444;">{</span>
+  <span class="c-attr">"name"</span>: <span class="c-str">"My Firmware"</span>,
+  <span class="c-attr">"version"</span>: <span class="c-str">"2.1.0"</span>,
+  <span class="c-attr">"builds"</span>: [
+    <span style="color:#444;">{</span>
+      <span class="c-attr">"chipFamily"</span>: <span class="c-str">"ESP32"</span>,
+      <span class="c-attr">"parts"</span>: [
+        <span style="color:#444;">{</span> <span class="c-attr">"path"</span>: <span class="c-str">"bootloader.bin"</span>,  <span class="c-attr">"offset"</span>: <span class="c-num">4096</span>  <span style="color:#444;">}</span>,
+        <span style="color:#444;">{</span> <span class="c-attr">"path"</span>: <span class="c-str">"partitions.bin"</span>,  <span class="c-attr">"offset"</span>: <span class="c-num">32768</span> <span style="color:#444;">}</span>,
+        <span style="color:#444;">{</span> <span class="c-attr">"path"</span>: <span class="c-str">"boot_app0.bin"</span>,  <span class="c-attr">"offset"</span>: <span class="c-num">57344</span> <span style="color:#444;">}</span>,
+        <span style="color:#444;">{</span> <span class="c-attr">"path"</span>: <span class="c-str">"firmware.bin"</span>,   <span class="c-attr">"offset"</span>: <span class="c-num">65536</span> <span style="color:#444;">}</span>
+      <span style="color:#444;">]</span>
+    <span style="color:#444;">}</span>,
+    <span style="color:#444;">{</span>
+      <span class="c-attr">"chipFamily"</span>: <span class="c-str">"ESP32-S3"</span>,
+      <span class="c-attr">"parts"</span>: [<span style="color:#444;">{</span> <span class="c-attr">"path"</span>: <span class="c-str">"firmware-s3.bin"</span>,   <span class="c-attr">"offset"</span>: <span class="c-num">0</span> <span style="color:#444;">}</span>]
+    <span style="color:#444;">}</span>,
+    <span style="color:#444;">{</span>
+      <span class="c-attr">"chipFamily"</span>: <span class="c-str">"ESP8266"</span>,
+      <span class="c-attr">"parts"</span>: [<span style="color:#444;">{</span> <span class="c-attr">"path"</span>: <span class="c-str">"firmware-8266.bin"</span>, <span class="c-attr">"offset"</span>: <span class="c-num">0</span> <span style="color:#444;">}</span>]
+    <span style="color:#444;">}</span>
+  <span style="color:#444;">]</span>
+<span style="color:#444;">}</span></pre>
+    <button class="cpy-btn" onclick="doCopy(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy
+    </button>
+  </div>
+
+  <div class="step-title" style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;">Configure flash mode / frequency / size / baud per firmware</div>
+  <div class="step-desc" style="font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:10px;">
+    Some firmware only boots when written with a specific flash mode or clock. You decide the exact flashing settings in the manifest instead of relying on the default fast <code class="inline">qio</code> path. A <code class="inline">flashSettings</code> object on the manifest root applies to every build; the same object on a single build overrides it. The resolved settings are shown to the user as a "Flash settings" strip before flashing.
+  </div>
+  <div class="code-wrap" style="margin-bottom:22px;">
+    <pre><span style="color:#444;">{</span>
+  <span class="c-attr">"name"</span>: <span class="c-str">"My Firmware"</span>,
+  <span class="c-attr">"flashSettings"</span>: <span style="color:#444;">{</span>
+    <span class="c-attr">"mode"</span>: <span class="c-str">"dio"</span>,
+    <span class="c-attr">"freq"</span>: <span class="c-str">"40m"</span>,
+    <span class="c-attr">"baud"</span>: <span class="c-num">460800</span>,
+    <span class="c-attr">"compress"</span>: <span class="c-key">true</span>
+  <span style="color:#444;">}</span>,
+  <span class="c-attr">"builds"</span>: [
+    <span style="color:#444;">{</span>
+      <span class="c-attr">"chipFamily"</span>: <span class="c-str">"ESP32-S3"</span>,
+      <span class="c-attr">"flashSettings"</span>: <span style="color:#444;">{</span> <span class="c-attr">"mode"</span>: <span class="c-str">"qio"</span>, <span class="c-attr">"freq"</span>: <span class="c-str">"80m"</span>, <span class="c-attr">"baud"</span>: <span class="c-num">921600</span> <span style="color:#444;">}</span>,
+      <span class="c-attr">"parts"</span>: [<span style="color:#444;">{</span> <span class="c-attr">"path"</span>: <span class="c-str">"firmware-s3.bin"</span>, <span class="c-attr">"offset"</span>: <span class="c-num">0</span> <span style="color:#444;">}</span>]
+    <span style="color:#444;">}</span>,
+    <span style="color:#444;">{</span>
+      <span class="c-attr">"chipFamily"</span>: <span class="c-str">"ESP8266"</span>,
+      <span class="c-attr">"flashSettings"</span>: <span style="color:#444;">{</span> <span class="c-attr">"freq"</span>: <span class="c-str">"26m"</span>, <span class="c-attr">"baud"</span>: <span class="c-num">115200</span> <span style="color:#444;">}</span>,
+      <span class="c-attr">"parts"</span>: [<span style="color:#444;">{</span> <span class="c-attr">"path"</span>: <span class="c-str">"firmware-8266.bin"</span>, <span class="c-attr">"offset"</span>: <span class="c-num">0</span> <span style="color:#444;">}</span>]
+    <span style="color:#444;">}</span>
+  <span style="color:#444;">]</span>
+<span style="color:#444;">}</span></pre>
+    <button class="cpy-btn" onclick="doCopy(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy
+    </button>
+  </div>
+
+  <div style="margin-bottom:16px;">
+    <div class="tag" style="margin-bottom:14px;">flashSettings reference</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Key</th><th>Values</th><th>Default</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td class="td-mono">mode</td><td><code>keep</code> <code>qio</code> <code>qout</code> <code>dio</code> <code>dout</code></td><td><code>keep</code></td><td>SPI flash mode. <code>qio</code>/<code>qout</code> are fastest; use <code>dio</code>/<code>dout</code> for boards with limited wiring or older flash chips.</td></tr>
+          <tr><td class="td-mono">freq</td><td><code>keep</code> <code>80m</code> <code>40m</code> <code>26m</code> <code>20m</code></td><td><code>keep</code></td><td>Flash clock frequency. Lower for marginal/old flash chips.</td></tr>
+          <tr><td class="td-mono">flashSize</td><td><code>detect</code> <code>keep</code> <code>256KB</code>..<code>16MB</code></td><td><code>detect</code></td><td>Override the auto-detected flash size.</td></tr>
+          <tr><td class="td-mono">baud</td><td>positive integer</td><td><code>460800</code></td><td>Serial baud for connect + write. Capped at 115200 for ESP8266/8285.</td></tr>
+          <tr><td class="td-mono">erase</td><td><code>true</code> <code>false</code></td><td>user control</td><td>Force or default the "Erase flash" toggle in the UI. Omit to leave the choice to the user.</td></tr>
+          <tr><td class="td-mono">compress</td><td><code>true</code> <code>false</code></td><td><code>true</code></td><td>Hardware compression during transfer.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="manifest-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div><strong>Precedence:</strong> user UI selection &gt; build-level <code class="inline">flashSettings</code> &gt; manifest-level <code class="inline">flashSettings</code> &gt; component attributes (<code class="inline">baud</code>, <code class="inline">erase-first</code>) &gt; defaults. Users can choose their preferred flashing speed directly in the modal, with automatic 115200 baud fallback for ESP8266 and one-click Safe Mode retry.</div>
+  </div>
+
+  <!-- Attributes table -->
+  <div style="margin-bottom:16px;">
+    <div class="tag" style="margin-bottom:14px;">HTML reference</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Attribute</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="td-mono">manifest</td><td><code>required</code></td><td>Absolute URL to your firmware manifest JSON.</td></tr>
+          <tr><td class="td-mono">label</td><td><code>"Install Firmware"</code></td><td>Label text on the default button. Ignored when using a slotted custom button.</td></tr>
+          <tr><td class="td-mono">theme</td><td><code>"red"</code></td><td>Button theme: <code>red</code>, <code>dark</code>, <code>green</code>, <code>ghost</code>, or <code>minimal</code>.</td></tr>
+          <tr><td class="td-mono">erase-first</td><td><code>false</code></td><td>Boolean. When present, erases the full flash before writing. Also toggleable in the UI.</td></tr>
+          <tr><td class="td-mono">baud</td><td><code>460800</code></td><td>Default flash baud rate. Selectable by users in the modal (921600 Turbo, 460800 Fast, 230400 Balanced, 115200 Safe / ESP8266).</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Event</th><th>Detail payload</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td class="td-event">flash-success</td><td><code>{ chip, flashSize, duration, filesCount }</code></td><td>Fired after firmware is written and device has hard-reset.</td></tr>
+        <tr><td class="td-event">flash-error</td><td><code>{ title, message }</code></td><td>Fired if the flash process fails at any stage.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── FEATURES ── -->
+<section class="section rev" id="features">
+  <div class="section-head">
+    <div class="tag">Features</div>
+    <h2 class="section-h">Built on the SKR Flasher engine</h2>
+    <p class="section-sub">The same battle-tested flash engine from SKR Electronics Lab's professional flasher — now embeddable.</p>
+  </div>
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-icon fi-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div class="feat-title">No BOOT button hold required</div>
+      <div class="feat-desc">The SKR engine handles ROM bootloader entry via DTR/RTS signals automatically. Most boards flash without holding any buttons at all.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon fi-blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1"/><path d="M7 9H5M7 12H5M7 15H5M17 9h2M17 12h2M17 15h2M9 7V5M12 7V5M15 7V5M9 17v2M12 17v2M15 17v2"/></svg>
+      </div>
+      <div class="feat-title">Chip + MAC + flash size detection</div>
+      <div class="feat-desc">Probes chip family, MAC address, and installed flash size on connect. Auto-selects the correct firmware variant from your manifest.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon fi-red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      </div>
+      <div class="feat-title">Configurable speed & Safe Mode</div>
+      <div class="feat-desc">Up to 921600 baud with in-browser compression. Users can select speeds down to 115200 for noisy cables, and a one-click Safe Retry recovers if flashing ever drops.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon fi-amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="feat-title">MD5 verification after every write</div>
+      <div class="feat-desc">Every .bin file is verified with MD5 immediately after writing. The hash is displayed in the success screen for manual confirmation.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon fi-teal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      </div>
+      <div class="feat-title">Serial Monitor + Timestamps</div>
+      <div class="feat-desc">Real-time line-buffered monitor with millisecond timestamps, auto-scroll lock, configurable baud (including 74880 for ESP Boot ROM), DTR/RTS control, and command TX.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon fi-purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
+      <div class="feat-title">Works in any CMS or static site</div>
+      <div class="feat-desc">Pure HTML custom element. Embed in WordPress, Ghost, GitHub Pages, Cloudflare Pages, Notion export, or any static host with zero build steps.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon fi-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </div>
+      <div class="feat-title">Five button themes</div>
+      <div class="feat-desc">Choose from red, dark, green, ghost, or minimal via the <code class="inline">theme</code> attribute. Or use <code class="inline">slot="activate"</code> to supply any custom element.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon fi-amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="feat-title">100% local — zero server uploads</div>
+      <div class="feat-desc">All flashing is fully local. Firmware and device data never pass through any third-party server. Zero telemetry, zero tracking, zero server costs.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon fi-blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      </div>
+      <div class="feat-title">DOM events and custom attributes</div>
+      <div class="feat-desc">Listen to <code class="inline">flash-success</code> and <code class="inline">flash-error</code> events for analytics, post-flash actions, or UI updates. Configurable baud rate, label, and erase behavior via attributes.</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── SERIAL MONITOR ── -->
+<section class="section rev" id="serial-monitor">
+  <div class="section-head">
+    <div class="tag">Serial Monitor</div>
+    <h2 class="section-h">Debug your firmware without leaving the browser</h2>
+    <p class="section-sub">After flashing, open the built-in serial monitor directly from the success screen. Real-time line-buffered output, configurable baud rate and line endings, DTR/RTS signal control, and a command input — all in the browser.</p>
+  </div>
+
+  <div class="sm-demo-outer rev">
+    <div class="sm-demo-label">
+      <span class="sm-live-dot"></span>
+      Interactive preview — simulated output below, real output requires Web Serial
+    </div>
+    <div class="sm-demo-inner">
+      <div class="__efb-sm-header">
+        <div class="__efb-sm-hicon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        </div>
+        <div class="__efb-sm-htitles">
+          <div class="__efb-sm-htitle">Serial Monitor</div>
+          <div class="__efb-sm-hsub">
+            <span class="__efb-sm-status-dot"></span>
+            <span id="demo-conn-status">Connected at 115200 baud</span>
+          </div>
+        </div>
+      </div>
+      <div class="__efb-sm-toolbar">
+        <div class="__efb-sm-toolbar-left">
+          <span class="__efb-sm-label">Baud</span>
+          <select class="__efb-sm-select" id="demo-baud">
+            <option>9600</option><option>19200</option><option>38400</option>
+            <option>57600</option><option>74880</option><option selected>115200</option>
+            <option>230400</option><option>460800</option><option>921600</option>
+          </select>
+          <span class="__efb-sm-label">Line ending</span>
+          <select class="__efb-sm-select" id="demo-eol">
+            <option value="">None</option>
+            <option value="\r\n" selected>CR+LF</option>
+            <option value="\n">LF</option>
+            <option value="\r">CR</option>
+          </select>
+        </div>
+        <button class="__efb-sm-tbtn active" id="demo-dtr-btn">DTR</button>
+        <button class="__efb-sm-tbtn" id="demo-rts-btn">RST</button>
+        <button class="__efb-sm-tbtn __efb-sm-tbtn-clear" id="demo-clear-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          Clear
+        </button>
+      </div>
+      <div class="__efb-sm-output" id="demo-output">
+        <span class="__efb-sm-line sys" id="demo-placeholder">Simulated ESP32 output — use the input below to send commands</span>
+      </div>
+      <div class="__efb-sm-input-row">
+        <input class="__efb-sm-input" id="demo-input" placeholder="Type a command and press Enter or click Send" autocomplete="off" />
+        <button class="__efb-sm-send" id="demo-send-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send
+        </button>
+      </div>
+      <div class="__efb-sm-footer">
+        <a class="__efb-sm-footer-credit" href="https://esp-flash-button.pages.dev" target="_blank" rel="noopener">Built with ESP Flash Button</a>
+        <span class="__efb-sm-count" id="demo-line-count">0 lines</span>
+      </div>
+    </div>
+    <div class="ws-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div>The real Serial Monitor opens inside the flash dialog after a successful flash. It connects directly to your device via Web Serial — no relay server. This preview above is a fully functional simulator using the same UI. Requires Chrome 89+, Edge 89+, or Opera 76+ with a real ESP device connected via USB.</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── COMPARISON ── -->
+<section class="section rev" id="compare">
+  <div class="section-head">
+    <div class="tag">Comparison</div>
+    <h2 class="section-h">ESP Flash Button vs ESP Web Tools</h2>
+    <p class="section-sub">A detailed feature comparison. ESP Flash Button is the more capable, faster, and better-looking alternative.</p>
+  </div>
+  <div class="compare-grid">
+    <div class="cmp-card hl">
+      <div class="cmp-head" style="color:var(--red);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        ESP Flash Button
+      </div>
+      <div class="cmp-item"><div class="ci-y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div>Auto bootloader entry — no BOOT button hold</div></div>
+      <div class="cmp-item"><div class="ci-y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div>Chip + MAC + flash size auto-detection</div></div>
+      <div class="cmp-item"><div class="ci-y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div>921600 baud with in-browser compression</div></div>
+      <div class="cmp-item"><div class="ci-y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div>MD5 verification after every write</div></div>
+      <div class="cmp-item"><div class="ci-y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div>Built-in Serial Monitor after flash</div></div>
+      <div class="cmp-item"><div class="ci-y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div>Five button themes + custom slot</div></div>
+      <div class="cmp-item"><div class="ci-y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div>Modern dark-mode UI with animated feedback</div></div>
+      <div class="cmp-item"><div class="ci-y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div>DOM events (flash-success / flash-error)</div></div>
+      <div class="cmp-item"><div class="ci-y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div>Erase flash toggle in the UI</div></div>
+      <div class="cmp-item"><div class="ci-y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div>Same manifest format (fully compatible)</div></div>
+    </div>
+    <div class="cmp-card">
+      <div class="cmp-head" style="color:var(--text3);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        ESP Web Tools
+      </div>
+      <div class="cmp-item"><div class="ci-n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></div><div>Requires BOOT button on most boards</div></div>
+      <div class="cmp-item"><div class="ci-y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div>Basic chip family detection</div></div>
+      <div class="cmp-item"><div class="ci-n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></div><div>Slower default baud rate</div></div>
+      <div class="cmp-item"><div class="ci-n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></div><div>No MD5 verification</div></div>
+      <div class="cmp-item"><div class="ci-n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></div><div>No built-in serial monitor</div></div>
+      <div class="cmp-item"><div class="ci-n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></div><div>Single default button style only</div></div>
+      <div class="cmp-item"><div class="ci-n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></div><div>Dated, light-themed UI</div></div>
+      <div class="cmp-item"><div class="ci-y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div>DOM events</div></div>
+      <div class="cmp-item"><div class="ci-n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></div><div>No UI erase toggle</div></div>
+      <div class="cmp-item"><div class="ci-y"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div>Improv Wi-Fi standard support</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── SUPPORTED CHIPS ── -->
+<section class="section rev" id="chips">
+  <div class="section-head">
+    <div class="tag">Compatibility</div>
+    <h2 class="section-h">Supported chips and boards</h2>
+    <p class="section-sub">All ESP32-family chips supported by esptool-js. Any board with a USB-to-serial converter works without drivers.</p>
+  </div>
+  <div class="chip-list" style="margin-bottom:20px;">
+    <div class="chip-pill">ESP32</div>
+    <div class="chip-pill">ESP32-S2</div>
+    <div class="chip-pill">ESP32-S3</div>
+    <div class="chip-pill">ESP32-C3</div>
+    <div class="chip-pill">ESP32-C6</div>
+    <div class="chip-pill">ESP32-H2</div>
+    <div class="chip-pill">ESP8266</div>
+    <div class="chip-pill">ESP8285</div>
+  </div>
+  <div style="font-size:13px;color:var(--text3);line-height:1.8;">
+    <strong style="color:var(--text2);">Browser requirement:</strong> Chrome 89+, Edge 89+, or Opera 76+ on desktop. The Web Serial API is not available in Firefox or Safari.<br>
+    <strong style="color:var(--text2);">USB-serial chips:</strong> CP2102, CP2104, CH340, CH341, FTDI FT232R, and any CDC-ACM serial adapter.<br>
+    <strong style="color:var(--text2);">Connection:</strong> Standard USB cable with data lines (not charge-only cables).
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── FAQ ── -->
+<section class="section rev" id="faq">
+  <div class="section-head">
+    <div class="tag">FAQ</div>
+    <h2 class="section-h">Frequently asked questions</h2>
+  </div>
+  <div class="faq-list">
+    <div class="faq-item open">
+      <div class="faq-q">What is ESP Flash Button?<span class="faq-arrow"></span></div>
+      <div class="faq-a">ESP Flash Button is a free, open-source web component that adds a one-click firmware installer to any website. It uses the Web Serial API to flash ESP32, ESP8266, and ESP32-S3 microcontrollers directly from the browser — no software installation, no IDE, no drivers required. It's built by SKR Electronics Lab and powered by Espressif's esptool-js.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">How is this different from ESP Web Tools?<span class="faq-arrow"></span></div>
+      <div class="faq-a">ESP Flash Button uses the SKR Flasher engine which automatically handles ROM bootloader entry — most boards flash without holding any buttons. It also runs at 921600 baud (fastest supported), performs MD5 verification after every write, detects chip type + MAC + flash size, includes a built-in serial monitor, offers five button themes, and features a modern dark-mode UI with real-time progress and animated feedback.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Which browsers are supported?<span class="faq-arrow"></span></div>
+      <div class="faq-a">Google Chrome 89+, Microsoft Edge 89+, and Opera 76+ on desktop. The Web Serial API is required, which Firefox and Safari do not currently support. Mobile browsers are also not supported due to Web Serial API limitations.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Do I need to hold the BOOT button?<span class="faq-arrow"></span></div>
+      <div class="faq-a">In most cases, no. The SKR Flasher engine manages bootloader entry automatically via DTR/RTS serial handshake lines. Simply plug in your board, click Connect, and the tool handles the rest. Some boards with non-standard USB-serial chips (particularly certain CH340 variants) may still need manual button intervention.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Is my firmware uploaded to any server?<span class="faq-arrow"></span></div>
+      <div class="faq-a">No. Everything happens entirely locally in your browser. Firmware files are fetched directly from your own server and written to the device via the Web Serial API. No data passes through any third-party server. The component itself has zero telemetry and collects no information whatsoever.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What is the flash speed?<span class="faq-arrow"></span></div>
+      <div class="faq-a">Default flash speed is 921600 baud with hardware compression enabled. A typical 2 MB firmware completes in under 15 seconds. You can reduce to 115200 baud via the <code class="inline">baud</code> attribute if you have a problematic USB cable or a board that doesn't support high baud rates reliably.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">My device flashes but won't boot. Can I change the flash mode?<span class="faq-arrow"></span></div>
+      <div class="faq-a">Yes. Some firmware (or certain boards / older flash chips) only runs with a specific SPI flash mode or clock frequency. Set <code class="inline">flashSettings</code> in your manifest — e.g. <code class="inline">{"flashSettings": {"mode": "dio", "freq": "40m"}}</code> — on the manifest root or on a single build. The component writes with exactly those settings and shows them as a "Flash settings" strip before flashing. Build-level settings override manifest-level settings, which override the <code class="inline">baud</code> / <code class="inline">erase-first</code> attributes.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can I use my own button styling?<span class="faq-arrow"></span></div>
+      <div class="faq-a">Yes. In addition to the five built-in themes (red, dark, green, ghost, minimal) you can supply any element using the <code class="inline">slot="activate"</code> attribute. The component adds the flash behavior to your element while keeping all of your existing styles intact.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">How does the Serial Monitor work?<span class="faq-arrow"></span></div>
+      <div class="faq-a">After a successful flash, the success screen shows a Serial Monitor button. Clicking it opens a dedicated monitor window that reads from the same serial port using the Web Serial API readable stream. It buffers incoming bytes into complete lines, supports configurable baud rate and line endings, lets you toggle DTR, pulse RTS to reset the device, and send custom commands. The port is fully disconnected from esptool before the monitor opens, so there are no locking conflicts.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What CORS headers do I need?<span class="faq-arrow"></span></div>
+      <div class="faq-a">Your server must send <code class="inline">Access-Control-Allow-Origin: *</code> on both your manifest JSON file and all .bin firmware files. Without CORS headers, the browser will block the fetch requests and the flash will fail with a manifest error. See the CORS setup section below for platform-specific instructions.</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── CORS ── -->
+<section class="section rev" id="cors">
+  <div class="section-head">
+    <div class="tag">Server setup</div>
+    <h2 class="section-h">CORS configuration</h2>
+    <p class="section-sub">Your manifest and .bin files must allow cross-origin fetch requests. Add these headers to your server.</p>
+  </div>
+  <div class="cors-grid">
+    <div>
+      <div style="font-size:12px;font-family:var(--mono);color:var(--text3);margin-bottom:8px;letter-spacing:.06em;">Apache (.htaccess)</div>
+      <div class="code-wrap">
+        <pre><span class="c-tag">Header</span> set Access-Control-Allow-Origin <span class="c-str">"*"</span></pre>
+        <button class="cpy-btn" onclick="doCopy(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-family:var(--mono);color:var(--text3);margin-bottom:8px;letter-spacing:.06em;">Nginx</div>
+      <div class="code-wrap">
+        <pre><span class="c-key">add_header</span> Access-Control-Allow-Origin *;</pre>
+        <button class="cpy-btn" onclick="doCopy(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-family:var(--mono);color:var(--text3);margin-bottom:8px;letter-spacing:.06em;">Cloudflare Pages (_headers)</div>
+      <div class="code-wrap">
+        <pre>/firmware/<span class="c-attr">*</span>
+  Access-Control-Allow-Origin: *</pre>
+        <button class="cpy-btn" onclick="doCopy(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-family:var(--mono);color:var(--text3);margin-bottom:8px;letter-spacing:.06em;">Express / Node.js</div>
+      <div class="code-wrap">
+        <pre>app.use(<span class="c-str">'/firmware'</span>, (req, res, next) => {
+  res.header(<span class="c-str">'Access-Control-Allow-Origin'</span>, <span class="c-str">'*'</span>);
+  next();
+});</pre>
+        <button class="cpy-btn" onclick="doCopy(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer">
+  <a class="footer-brand" href="#">
+    <div class="footer-brand-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:var(--text);">ESP Flash Button</div>
+      <div style="font-size:10px;color:var(--text4);font-family:var(--mono);">by SKR Electronics Lab</div>
+    </div>
+  </a>
+  <div class="footer-text">
+    &copy; <span id="yr"></span>
+    <a class="footer-a" href="https://skrelectronicslab.com" target="_blank">SKR Electronics Lab</a>.
+    All flashing is local. No data is uploaded.
+  </div>
+  <div class="footer-meta">
+    <div class="footer-links">
+      <a class="footer-a" href="https://github.com/espressif/esptool-js" target="_blank">esptool-js</a>
+      <a class="footer-a" href="https://github.com/anomalyco/esp-flash-button" target="_blank">GitHub</a>
+      <a class="footer-a" href="https://skrelectronicslab.com" target="_blank">SKR Lab</a>
+    </div>
+    <div class="footer-note">Powered by <a href="https://esp-flash-button.pages.dev" style="color:#555;text-decoration:none;font-weight:500;" target="_blank">esp-flash-button</a></div>
+  </div>
+</footer>
+
+</div><!-- /wrap -->
+
+<!-- Load component -->
+<script src="esp-flash-button.js"></script>
+
+<script>
+/* ── Year ── */
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+/* ── Custom cursor ── */
+const curDot  = document.getElementById('cur-dot');
+const curRing = document.getElementById('cur-ring');
+const curGlow = document.getElementById('cur-glow');
+let mx = -200, my = -200;
+let rx = -200, ry = -200;
+
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; curGlow.style.opacity = '1'; });
+document.addEventListener('mouseleave', () => { curGlow.style.opacity = '0'; });
+
+function tickCursor() {
+  curDot.style.left  = mx + 'px';
+  curDot.style.top   = my + 'px';
+  rx += (mx - rx) * 0.14;
+  ry += (my - ry) * 0.14;
+  curRing.style.left = rx + 'px';
+  curRing.style.top  = ry + 'px';
+  curGlow.style.left = mx + 'px';
+  curGlow.style.top  = my + 'px';
+  requestAnimationFrame(tickCursor);
+}
+requestAnimationFrame(tickCursor);
+
+/* ── Cursor Particles ── */
+(function() {
+  const canvas = document.getElementById('cursor-particles');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const COUNT = 55;
+  const particles = [];
+  for (let i = 0; i < COUNT; i++) {
+    particles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+      size: 1.5 + Math.random() * 2,
+      alpha: 0.15 + Math.random() * 0.35,
+      hue: 0 + Math.random() * 20,
+    });
+  }
+
+  function tickParticles() {
+    ctx.clearRect(0, 0, W, H);
+    for (const p of particles) {
+      // Drift toward cursor
+      const dx = mx - p.x, dy = my - p.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 1) {
+        const force = Math.min(0.008, 1 / (dist * 0.08));
+        p.vx += (dx / dist) * force;
+        p.vy += (dy / dist) * force;
+      }
+      // Return to random drift
+      p.vx += (Math.random() - 0.5) * 0.06;
+      p.vy += (Math.random() - 0.5) * 0.06;
+      // Damping
+      p.vx *= 0.96; p.vy *= 0.96;
+      // Speed limit
+      const spd = Math.hypot(p.vx, p.vy);
+      if (spd > 2) { p.vx = (p.vx / spd) * 2; p.vy = (p.vy / spd) * 2; }
+      // Move
+      p.x += p.vx; p.y += p.vy;
+      // Wrap around edges
+      if (p.x < -10) p.x = W + 10; if (p.x > W + 10) p.x = -10;
+      if (p.y < -10) p.y = H + 10; if (p.y > H + 10) p.y = -10;
+
+      // Fade based on distance from cursor
+      let a = p.alpha;
+      if (dist < 200) a = p.alpha * (dist / 200);
+      if (dist < 30) a = 0;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue}, 80%, 60%, ${a})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(tickParticles);
+  }
+  tickParticles();
+})();
+
+/* ── Circuit board canvas ── */
+(function() {
+  const canvas = document.getElementById('circuit-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  const NODES = [];
+  const TRACES = [];
+  const NODE_COUNT = 28;
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Generate grid-snapped nodes
+  function initNodes() {
+    NODES.length = 0;
+    const gridX = Math.floor(W / 80);
+    const gridY = Math.floor(H / 80);
+    for (let i = 0; i < NODE_COUNT; i++) {
+      NODES.push({
+        x: (Math.floor(Math.random() * gridX) + 0.5) * 80,
+        y: (Math.floor(Math.random() * gridY) + 0.5) * 80,
+        pulse: Math.random(),
+        pulseSpeed: 0.004 + Math.random() * 0.006,
+      });
+    }
+    // Build traces (L-shaped paths between nearby nodes)
+    TRACES.length = 0;
+    for (let i = 0; i < NODES.length; i++) {
+      const candidates = NODES
+        .map((n, j) => ({ j, d: Math.hypot(n.x - NODES[i].x, n.y - NODES[i].y) }))
+        .filter(c => c.j !== i && c.d < 320 && c.d > 60)
+        .sort((a, b) => a.d - b.d)
+        .slice(0, 2);
+      for (const c of candidates) {
+        if (!TRACES.find(t => (t.a === c.j && t.b === i) || (t.a === i && t.b === c.j))) {
+          TRACES.push({ a: i, b: c.j, progress: 0, speed: 0.0008 + Math.random() * 0.001, active: Math.random() > 0.4 });
+        }
+      }
+    }
+  }
+  initNodes();
+  window.addEventListener('resize', initNodes);
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Draw traces
+    for (const t of TRACES) {
+      if (!t.active) continue;
+      t.progress += t.speed;
+      if (t.progress > 1.3) t.progress = 0;
+
+      const na = NODES[t.a], nb = NODES[t.b];
+      const mid = { x: nb.x, y: na.y }; // L-shape via horizontal then vertical
+
+      // Base trace line
+      ctx.beginPath();
+      ctx.moveTo(na.x, na.y);
+      ctx.lineTo(mid.x, mid.y);
+      ctx.lineTo(nb.x, nb.y);
+      ctx.strokeStyle = 'rgba(30,30,40,0.9)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Travelling pulse
+      if (t.progress < 1) {
+        const totalLen = Math.abs(nb.x - na.x) + Math.abs(nb.y - na.y);
+        const travelDist = t.progress * totalLen;
+        const seg1 = Math.abs(nb.x - na.x);
+        let px, py;
+        if (travelDist <= seg1) {
+          px = na.x + (nb.x - na.x) * (travelDist / seg1);
+          py = na.y;
+        } else {
+          px = nb.x;
+          py = na.y + (nb.y - na.y) * ((travelDist - seg1) / Math.abs(nb.y - na.y));
+        }
+        const grad = ctx.createRadialGradient(px, py, 0, px, py, 10);
+        grad.addColorStop(0, 'rgba(224,48,42,0.7)');
+        grad.addColorStop(0.4, 'rgba(224,48,42,0.15)');
+        grad.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(px, py, 10, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+    }
+
+    // Draw nodes
+    for (const n of NODES) {
+      n.pulse += n.pulseSpeed;
+      const p = (Math.sin(n.pulse) + 1) / 2;
+      const alpha = 0.12 + p * 0.18;
+
+      // Node dot
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(50,50,70,${alpha + 0.2})`;
+      ctx.fill();
+
+      // Occasional node glow
+      if (p > 0.8) {
+        const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, 18);
+        g.addColorStop(0, `rgba(224,48,42,${(p - 0.8) * 0.3})`);
+        g.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, 18, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ── Scroll reveal ── */
+const revObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.rev,.rev-l,.rev-r').forEach(el => revObserver.observe(el));
+
+/* ── Copy buttons ── */
+function doCopy(btn) {
+  const pre = btn.closest('.code-wrap').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText || pre.textContent).then(() => {
+    btn.classList.add('done');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Copied!';
+    setTimeout(() => {
+      btn.classList.remove('done');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy';
+    }, 2000);
+  });
+}
+
+/* ── FAQ accordion ── */
+document.querySelectorAll('.faq-q').forEach(el => {
+  el.addEventListener('click', () => {
+    const item = el.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  });
+});
+
+/* ── Demo Serial Monitor simulator ── */
+(function() {
+  const output   = document.getElementById('demo-output');
+  const inputEl  = document.getElementById('demo-input');
+  const sendBtn  = document.getElementById('demo-send-btn');
+  const clearBtn = document.getElementById('demo-clear-btn');
+  const dtrBtn   = document.getElementById('demo-dtr-btn');
+  const rtsBtn   = document.getElementById('demo-rts-btn');
+  const countEl  = document.getElementById('demo-line-count');
+  let lineCount  = 0;
+  let dtrState   = true;
+  let simInterval = null;
+
+  const BOOT_SEQ = [
+    { t: 'sys', v: '[Serial monitor opened at 115200 baud]' },
+    { t: 'sys', v: 'rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)' },
+    { t: 'rx',  v: 'configsip: 0, SPIWP:0xee' },
+    { t: 'rx',  v: 'clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00' },
+    { t: 'rx',  v: 'mode:DIO, clock div:2' },
+    { t: 'rx',  v: 'load:0x3fff0030,len:1184' },
+    { t: 'rx',  v: 'load:0x40078000,len:13232' },
+    { t: 'rx',  v: 'ho 0 tail 12 room 4' },
+    { t: 'rx',  v: 'load:0x40080400,len:3028' },
+    { t: 'sys', v: 'entry 0x400805e4' },
+    { t: 'ok',  v: 'I (312) cpu_start: ESP-IDF v5.1.2' },
+    { t: 'ok',  v: 'I (312) cpu_start: Pro cpu up.' },
+    { t: 'ok',  v: 'I (349) cpu_start: Starting scheduler on PRO CPU.' },
+    { t: 'rx',  v: 'I (349) main: Firmware v1.0.0 starting...' },
+    { t: 'ok',  v: 'I (362) wifi: WiFi initialized' },
+    { t: 'rx',  v: 'I (401) main: Connecting to WiFi...' },
+    { t: 'ok',  v: 'I (2843) main: WiFi connected. IP: 192.168.1.42' },
+    { t: 'rx',  v: 'I (2844) main: HTTP server started on port 80' },
+  ];
+
+  function addLine(type, text) {
+    const placeholder = document.getElementById('demo-placeholder');
+    if (placeholder) placeholder.remove();
+    while (output.childElementCount > 300) output.removeChild(output.firstChild);
+    const span = document.createElement('span');
+    span.className = '__efb-sm-line ' + type;
+    span.textContent = text;
+    output.appendChild(span);
+    output.scrollTop = output.scrollHeight;
+    lineCount++;
+    countEl.textContent = lineCount + (lineCount === 1 ? ' line' : ' lines');
+  }
+
+  // Play boot sequence
+  let bootIdx = 0;
+  function playBoot() {
+    if (bootIdx < BOOT_SEQ.length) {
+      const line = BOOT_SEQ[bootIdx++];
+      addLine(line.t, line.v);
+      setTimeout(playBoot, 120 + Math.random() * 140);
+    } else {
+      startLiveOutput();
+    }
+  }
+  setTimeout(playBoot, 500);
+
+  // Periodic live output
+  const LIVE_LINES = [
+    { t: 'rx', v: 'I (5001) main: Loop tick — uptime 5s' },
+    { t: 'rx', v: 'I (10001) main: Loop tick — uptime 10s' },
+    { t: 'rx', v: 'I (10002) sensor: Temperature 24.7 C, Humidity 58.2%' },
+    { t: 'rx', v: 'I (15001) main: Loop tick — uptime 15s' },
+    { t: 'rx', v: 'I (20001) main: Loop tick — uptime 20s' },
+    { t: 'rx', v: 'I (20003) wifi: RSSI -58 dBm' },
+    { t: 'rx', v: 'I (25001) main: Loop tick — uptime 25s' },
+    { t: 'rx', v: 'I (25004) sensor: Temperature 24.8 C, Humidity 58.0%' },
+    { t: 'rx', v: 'I (30001) main: Loop tick — uptime 30s' },
+  ];
+  let liveIdx = 0;
+  function startLiveOutput() {
+    simInterval = setInterval(() => {
+      if (liveIdx < LIVE_LINES.length) {
+        const l = LIVE_LINES[liveIdx++];
+        addLine(l.t, l.v);
+      } else {
+        clearInterval(simInterval);
+      }
+    }, 5000);
+  }
+
+  // Send command
+  function doSend() {
+    const val = inputEl.value.trim();
+    if (!val) return;
+    inputEl.value = '';
+    addLine('tx', '> ' + val);
+    // Simulate responses
+    setTimeout(() => {
+      if (val.toLowerCase() === 'status') {
+        addLine('ok', 'OK: System running, uptime 28s, free heap 218432 bytes');
+      } else if (val.toLowerCase() === 'reboot') {
+        addLine('sys', '[RST — device rebooting]');
+        bootIdx = 0; liveIdx = 0;
+        if (simInterval) clearInterval(simInterval);
+        setTimeout(playBoot, 800);
+      } else if (val.toLowerCase() === 'help') {
+        addLine('rx', 'Commands: status, reboot, help');
+      } else {
+        addLine('rx', 'echo: ' + val);
+      }
+    }, 80);
+  }
+
+  sendBtn.addEventListener('click', doSend);
+  inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') doSend(); });
+
+  clearBtn.addEventListener('click', () => {
+    output.innerHTML = '<span class="__efb-sm-line sys">Cleared.</span>';
+    lineCount = 1; countEl.textContent = '1 line';
+    if (simInterval) clearInterval(simInterval);
+    liveIdx = LIVE_LINES.length; // stop future live
+  });
+
+  dtrBtn.addEventListener('click', () => {
+    dtrState = !dtrState;
+    dtrBtn.classList.toggle('active', dtrState);
+    addLine('sys', '[DTR ' + (dtrState ? 'ON' : 'OFF') + ']');
+  });
+
+  rtsBtn.addEventListener('click', () => {
+    addLine('sys', '[RST pulse sent — device resetting]');
+    bootIdx = 0; liveIdx = 0;
+    if (simInterval) clearInterval(simInterval);
+    setTimeout(playBoot, 800);
+  });
+})();
+
+// ── AI copy button ──
+document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
+  const text = document.getElementById('ai-prompt-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = this;
+    const msg = document.getElementById('ai-copy-msg');
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Copied!';
+    if (msg) msg.textContent = 'Prompt copied — paste it to any AI assistant';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy prompt';
+      if (msg) msg.textContent = 'Click to copy the full project context';
+    }, 3000);
+  }).catch(() => {
+    const msg = document.getElementById('ai-copy-msg');
+    if (msg) msg.textContent = 'Failed to copy — select the text manually';
+  });
+});
+
+// ── Rain effect ──
+(function() {
+  const canvas = document.getElementById('rain-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  const DROPS = [];
+  const COUNT = 120;
+  for (let i = 0; i < COUNT; i++) {
+    DROPS.push({
+      x: Math.random() * W, y: Math.random() * H,
+      speed: 1.5 + Math.random() * 3, len: 8 + Math.random() * 18,
+      opacity: 0.03 + Math.random() * 0.08, width: 0.5 + Math.random() * 1,
+    });
+  }
+  function drawRain() {
+    ctx.clearRect(0, 0, W, H);
+    for (const d of DROPS) {
+      d.y += d.speed;
+      if (d.y > H) { d.y = -d.len; d.x = Math.random() * W; }
+      ctx.beginPath();
+      ctx.moveTo(d.x, d.y);
+      ctx.lineTo(d.x + 0.3, d.y + d.len);
+      ctx.strokeStyle = `rgba(224,48,42,${d.opacity})`;
+      ctx.lineWidth = d.width;
+      ctx.stroke();
+    }
+    requestAnimationFrame(drawRain);
+  }
+  drawRain();
+})();
+
+// ── Interactive size playground ──
+(function() {
+  const slider = document.getElementById('size-slider');
+  const btn = document.getElementById('playground-btn');
+  const badge = document.getElementById('custom-size-badge');
+  const codeEl = document.getElementById('playground-code');
+  const chkFull = document.getElementById('size-fullwidth-chk');
+  const themeBtns = document.querySelectorAll('.custom-theme-btn');
+  if (!slider || !btn) return;
+
+  let currentTheme = 'red';
+
+  function update() {
+    const sz = slider.value;
+    const isFull = chkFull ? chkFull.checked : false;
+    if (badge) badge.textContent = `size="${sz}"`;
+    btn.setAttribute('size', sz);
+    btn.setAttribute('theme', currentTheme);
+    if (isFull) {
+      btn.setAttribute('full-width', '');
+    } else {
+      btn.removeAttribute('full-width');
+    }
+    const fullAttr = isFull ? ' full-width' : '';
+    if (codeEl) {
+      codeEl.textContent = `<esp-flash-button manifest="https://yoursite.com/manifest.json" size="${sz}" theme="${currentTheme}"${fullAttr}></esp-flash-button>`;
+    }
+  }
+
+  slider.addEventListener('input', update);
+  if (chkFull) chkFull.addEventListener('change', update);
+
+  themeBtns.forEach(tBtn => {
+    tBtn.addEventListener('click', () => {
+      themeBtns.forEach(b => {
+        b.style.background = 'var(--surf2)';
+        b.style.borderColor = 'var(--line)';
+        b.style.color = 'var(--text3)';
+      });
+      tBtn.style.background = 'var(--surf3)';
+      tBtn.style.borderColor = 'var(--red)';
+      tBtn.style.color = 'var(--text)';
+      currentTheme = tBtn.dataset.theme;
+      update();
+    });
+  });
+})();
+
+// ── Subtle copy protection ──
+document.addEventListener('copy', function(e) {
+  if (!e.target.closest('pre,.code-wrap,.ai-prompt-box,input,textarea')) e.preventDefault();
+});
+
+</script>
+</body>
+</html>

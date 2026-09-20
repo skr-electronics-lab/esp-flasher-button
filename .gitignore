@@ -1,0 +1,9 @@
+# Dependencies & builds
+node_modules/
+.wrangler/
+dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,63 @@
+{
+  "name": "ESP Flash Button Demo - LED Blink",
+  "version": "1.0.0",
+  "description": "Multi-part LED blink firmware for testing ESP Flash Button. Includes bootloader, partition table, and application.",
+  "new_install_prompt_erase": true,
+  "funding_url": "https://skrelectronicslab.com",
+  "flashSettings": {
+    "mode": "dio",
+    "freq": "40m",
+    "baud": 460800,
+    "compress": true
+  },
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "flashSettings": {
+        "mode": "qio",
+        "freq": "80m"
+      },
+      "parts": [
+        { "path": "firmwares/esp32dev/bootloader.bin", "offset": 4096 },
+        { "path": "firmwares/esp32dev/partitions.bin", "offset": 32768 },
+        { "path": "firmwares/esp32dev/firmware.bin", "offset": 65536 }
+      ]
+    },
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        { "path": "firmwares/esp32-s3/bootloader.bin", "offset": 4096 },
+        { "path": "firmwares/esp32-s3/partitions.bin", "offset": 32768 },
+        { "path": "firmwares/esp32-s3/firmware.bin", "offset": 65536 }
+      ]
+    },
+    {
+      "chipFamily": "ESP32-S2",
+      "parts": [
+        { "path": "firmwares/esp32-s2/bootloader.bin", "offset": 4096 },
+        { "path": "firmwares/esp32-s2/partitions.bin", "offset": 32768 },
+        { "path": "firmwares/esp32-s2/firmware.bin", "offset": 65536 }
+      ]
+    },
+    {
+      "chipFamily": "ESP32-C3",
+      "parts": [
+        { "path": "firmwares/esp32-c3/bootloader.bin", "offset": 4096 },
+        { "path": "firmwares/esp32-c3/partitions.bin", "offset": 32768 },
+        { "path": "firmwares/esp32-c3/firmware.bin", "offset": 65536 }
+      ]
+    },
+    {
+      "chipFamily": "ESP8266",
+      "parts": [
+        { "path": "firmwares/esp8266/firmware.bin", "offset": 0 }
+      ]
+    },
+    {
+      "chipFamily": "ESP8285",
+      "parts": [
+        { "path": "firmwares/esp8285/firmware.bin", "offset": 0 }
+      ]
+    }
+  ]
+}
