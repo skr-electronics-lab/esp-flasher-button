@@ -127,6 +127,8 @@ interface FirmwareManifest {
   version?: string;
   description?: string;
   funding_url?: string;
+  wifi?: boolean; // Set false to disable post-flash Wi-Fi provisioning button
+  improv?: boolean; // Alias: set false to disable post-flash Improv Wi-Fi
   flashSettings?: FlashSettings;
   builds: FirmwareBuild[];
 }
