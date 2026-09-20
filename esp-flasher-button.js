@@ -4,8 +4,12 @@
  * Hosted on GitHub Pages: https://skr-electronics-lab.github.io/esp-flasher-button/
  * GitHub: https://github.com/skr-electronics-lab/esp-flasher-button
  *
+ * Copyright 2026 SK Raihan (SKR Electronics Lab)
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Usage:
- *   <script type="module" src="https://skr-electronics-lab.github.io/esp-flasher-button/esp-flash-button.js"></script>
+ *   <script type="module" src="https://skr-electronics-lab.github.io/esp-flasher-button/esp-flasher-button.js"></script>
  *   <esp-flasher-button manifest="https://yoursite.com/firmware/manifest.json"></esp-flasher-button>
  *
  *   <!-- Or flash directly from GitHub Releases without a manual manifest: -->

@@ -5,7 +5,7 @@
 **The ultra-modern, zero-dependency Web Component for flashing ESP32 & ESP8266 firmware directly from your browser.**
 
 [![GitHub stars](https://img.shields.io/github/stars/skr-electronics-lab/esp-flasher-button?style=for-the-badge&color=e03030)](https://github.com/skr-electronics-lab/esp-flasher-button/stargazers)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://github.com/skr-electronics-lab/esp-flasher-button/blob/main/LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-orange.svg?style=for-the-badge)](https://github.com/skr-electronics-lab/esp-flasher-button/blob/main/LICENSE)
 [![GitHub Pages](https://img.shields.io/badge/Live_Demo-GitHub_Pages-22c55e?style=for-the-badge&logo=github)](https://skr-electronics-lab.github.io/esp-flasher-button/)
 [![Web Serial API](https://img.shields.io/badge/Web_Serial_API-Native-8b5cf6?style=for-the-badge)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API)
 [![Support on Ko-fi](https://img.shields.io/badge/Support_on-Ko--fi-ff5e5b?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/skrelectronicslab)
@@ -239,5 +239,6 @@ Developed with precision by **SK Raihan (SKR Electronics Lab)**.
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
-Feel free to use it in your open-source projects, personal maker builds, or commercial products!
+This project is licensed under the [Apache License 2.0](LICENSE).
+
+Copyright 2026 SK Raihan (SKR Electronics Lab). You are free to use, modify, and distribute this project — including in commercial products — as long as you retain the license notice and give appropriate attribution.
