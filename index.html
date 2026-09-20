@@ -145,23 +145,17 @@ body:has(button:hover) #cur-ring {
 ──────────────────────────────────────────── */
 #circuit-canvas {
   position: fixed; inset: 0; z-index: 0;
-  pointer-events: none; opacity: 0.5;
+  pointer-events: none; opacity: 0.95;
 }
 
 /* ────────────────────────────────────────────
-   SCANLINE OVERLAY
+   SUBTLE PERIPHERAL VIGNETTE
 ──────────────────────────────────────────── */
 body::after {
   content: '';
   position: fixed; inset: 0; z-index: 99997;
   pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,.03) 2px,
-    rgba(0,0,0,.03) 4px
-  );
+  background: radial-gradient(circle at center, transparent 65%, rgba(4, 4, 7, 0.4) 100%);
 }
 
 /* ────────────────────────────────────────────
@@ -252,16 +246,71 @@ body::after {
    HERO
 ──────────────────────────────────────────── */
 .hero {
-  padding: 100px 0 80px;
+  padding: 105px 0 82px;
   display: flex; flex-direction: column; align-items: center;
   text-align: center; gap: 28px; position: relative;
+  isolation: isolate;
 }
+
+/* Background Cyber Grid */
+.hero-grid-pattern {
+  position: absolute;
+  top: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  max-width: 1400px;
+  height: 700px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(ellipse 65% 55% at 50% 36%, black 15%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 36%, black 15%, transparent 75%);
+  pointer-events: none;
+  z-index: -2;
+}
+
+/* Ambient Radial Aurora Nebulae */
+.hero-aurora-glow {
+  position: absolute;
+  top: 36%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 760px;
+  height: 420px;
+  background: radial-gradient(ellipse at center, rgba(224, 48, 42, 0.22) 0%, rgba(224, 48, 42, 0.06) 45%, transparent 72%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: -1;
+  animation: auroraBreath 8s ease-in-out infinite alternate;
+}
+.hero-aurora-secondary {
+  position: absolute;
+  top: 15%;
+  right: 10%;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(255, 120, 50, 0.08) 0%, transparent 68%);
+  filter: blur(65px);
+  pointer-events: none;
+  z-index: -1;
+}
+@keyframes auroraBreath {
+  0% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.75; }
+  50% { transform: translate(-50%, -48%) scale(1.06); opacity: 1; }
+  100% { transform: translate(-50%, -52%) scale(0.96); opacity: 0.82; }
+}
+
 .hero-eyebrow {
   display: inline-flex; align-items: center; gap: 8px;
   font-family: var(--mono); font-size: 11px; font-weight: 500;
   color: var(--text3); letter-spacing: .1em; text-transform: uppercase;
   padding: 6px 14px; border-radius: 100px;
-  background: var(--surf2); border: 1px solid var(--line2);
+  background: rgba(20, 20, 24, 0.85);
+  border: 1px solid var(--line2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .hero-eyebrow-dot {
   width: 6px; height: 6px; border-radius: 50%; background: var(--green);
@@ -270,59 +319,92 @@ body::after {
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
 .hero-h1 {
-  font-size: clamp(34px,6.5vw,68px); font-weight: 900;
-  letter-spacing: -.04em; line-height: 1.1; max-width: 860px;
+  font-size: clamp(34px, 6.2vw, 66px); font-weight: 900;
+  letter-spacing: -.035em; line-height: 1.15; max-width: 900px;
   color: var(--text);
 }
-.hero-h1 .accent {
-  background: linear-gradient(135deg, var(--red3) 0%, var(--red) 60%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+
+/* Hero Rotating Dynamic Word */
+.hero-rotator-container {
+  display: inline-block;
+  position: relative;
+  vertical-align: baseline;
+  padding: 0 8px;
+  perspective: 1000px;
 }
-.hero-shimmer {
-  background: linear-gradient(120deg, #ff4a40 0%, #ff8a7a 25%, #e0302a 50%, #ff6054 75%, #ff4a40 100%);
-  background-size: 200% auto;
+.hero-rotator-container::before {
+  content: '';
+  position: absolute;
+  inset: -6px -20px;
+  background: radial-gradient(ellipse at center, rgba(255, 50, 38, 0.28) 0%, rgba(255, 50, 38, 0.08) 50%, transparent 75%);
+  filter: blur(14px);
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.9;
+  animation: auraGlow 3.5s ease-in-out infinite alternate;
+}
+@keyframes auraGlow {
+  0% { opacity: 0.7; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1.05); }
+}
+
+.hero-rotator-word {
+  display: inline-block;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #ffffff 0%, #ff8c82 25%, #ff3b30 65%, #e0261f 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: heroShimmer 6s linear infinite;
-}
-@keyframes heroShimmer {
-  0% { background-position: 0% center; }
-  100% { background-position: 200% center; }
-}
-/* Hero word cycle badge animation */
-.hero-cycle-slot {
-  display: inline-block;
-  vertical-align: middle;
-  perspective: 800px;
-  margin: 6px 2px;
-}
-.hero-cycle-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 2px 20px;
-  border-radius: 12px;
-  background: rgba(224,48,42,0.1);
-  border: 1px solid rgba(224,48,42,0.4);
-  box-shadow: 0 0 28px rgba(224,48,42,0.22), inset 0 0 14px rgba(224,48,42,0.08);
-  color: #ff5752;
-  font-size: clamp(28px, 5.5vw, 56px);
   font-weight: 900;
-  letter-spacing: -.03em;
-  white-space: nowrap;
-  transition: opacity .32s cubic-bezier(.2,.9,.3,1), transform .32s cubic-bezier(.2,.9,.3,1), filter .32s ease;
+  transform-style: preserve-3d;
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.38s ease, filter 0.38s ease;
+  will-change: transform, opacity, filter;
+  filter: drop-shadow(0 2px 14px rgba(255, 60, 48, 0.35));
 }
-.hero-cycle-badge.leaving {
+.hero-rotator-word.flip-out {
+  transform: rotateX(85deg) translateY(-26px) scale(0.92);
   opacity: 0;
-  transform: translateY(-16px) scale(0.96);
-  filter: blur(4px);
+  filter: blur(8px);
 }
-.hero-cycle-badge.entering {
+.hero-rotator-word.flip-in {
+  transform: rotateX(-85deg) translateY(26px) scale(0.92);
   opacity: 0;
-  transform: translateY(18px) scale(0.96);
-  filter: blur(4px);
+  filter: blur(8px);
+}
+
+.hero-laser-line {
+  position: absolute;
+  bottom: -3px;
+  left: 6px;
+  right: 6px;
+  height: 2.5px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, transparent, #ff5247 20%, #ffffff 50%, #ff5247 80%, transparent);
+  box-shadow: 0 0 16px rgba(255, 82, 71, 0.9), 0 0 5px #ff5247;
+  animation: laserSweep 3.2s ease-in-out infinite;
+}
+@keyframes laserSweep {
+  0% { opacity: 0.6; filter: drop-shadow(0 0 6px #ff4a40); }
+  50% { opacity: 1; filter: drop-shadow(0 0 14px #ff665c); }
+  100% { opacity: 0.6; filter: drop-shadow(0 0 6px #ff4a40); }
+}
+
+/* Tagline Gradient Shimmer */
+.hero-shimmer-tagline {
+  display: block;
+  margin-top: 8px;
+  background: linear-gradient(120deg, #ff3b30 0%, #ff8a7a 28%, #e0261f 52%, #ffffff 72%, #ff3b30 100%);
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: taglineSweep 6s ease-in-out infinite;
+  filter: drop-shadow(0 2px 20px rgba(224, 48, 42, 0.32));
+}
+@keyframes taglineSweep {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 .hero-sub {
   font-size: 17px; color: var(--text2); max-width: 600px; line-height: 1.7; font-weight: 400;
@@ -1306,20 +1388,25 @@ td code { font-family: var(--mono); font-size: 11px; background: var(--surf2); p
 
 <!-- ── HERO ── -->
 <section class="hero">
-  <div class="hero-eyebrow">
+  <div class="hero-grid-pattern" aria-hidden="true"></div>
+  <div class="hero-aurora-glow" aria-hidden="true"></div>
+  <div class="hero-aurora-secondary" aria-hidden="true"></div>
+
+  <div class="hero-eyebrow rev">
     <span class="hero-eyebrow-dot"></span>
     Zero Drivers &nbsp;&middot;&nbsp; 100% In-Browser Web Serial &nbsp;&middot;&nbsp; Open Source v1.0
   </div>
 
-  <h1 class="hero-h1">
+  <h1 class="hero-h1 rev">
     Embed an ESP firmware flasher on<br>
-    <span class="hero-cycle-slot">
-      <span class="hero-cycle-badge" id="hero-cycle-badge">your website</span>
+    <span class="hero-rotator-container">
+      <span class="hero-rotator-word" id="hero-dynamic-word">your website</span>
+      <span class="hero-laser-line"></span>
     </span><br>
-    <span class="accent hero-shimmer">with just one script tag.</span>
+    <span class="hero-shimmer-tagline">with just one script tag.</span>
   </h1>
 
-  <p class="hero-sub">
+  <p class="hero-sub rev">
     Turn any blog, website, or documentation page into a 1-click Web Serial flashing station. Your users flash ESP32, ESP8266 &amp; ESP32-S3 boards straight from Chrome &amp; Edge &mdash; zero drivers, zero IDEs, zero boot button hassle.
   </p>
 
@@ -2579,76 +2666,103 @@ requestAnimationFrame(tickCursor);
   tickParticles();
 })();
 
-/* ── Circuit board canvas ── */
+/* ── Circuit board canvas (Enhanced PCB Routing & Glowing Pulses) ── */
 (function() {
   const canvas = document.getElementById('circuit-canvas');
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   let W, H;
   const NODES = [];
   const TRACES = [];
-  const NODE_COUNT = 28;
+  const NODE_COUNT = 34;
+  let mouse = { x: -999, y: -999 };
+
+  window.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  }, { passive: true });
+
+  window.addEventListener('mouseleave', () => {
+    mouse.x = -999;
+    mouse.y = -999;
+  });
 
   function resize() {
     W = canvas.width  = window.innerWidth;
     H = canvas.height = window.innerHeight;
   }
   resize();
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', () => { resize(); initNodes(); });
 
   // Generate grid-snapped nodes
   function initNodes() {
     NODES.length = 0;
-    const gridX = Math.floor(W / 80);
-    const gridY = Math.floor(H / 80);
+    const gridX = Math.floor(W / 90);
+    const gridY = Math.floor(H / 90);
     for (let i = 0; i < NODE_COUNT; i++) {
       NODES.push({
-        x: (Math.floor(Math.random() * gridX) + 0.5) * 80,
-        y: (Math.floor(Math.random() * gridY) + 0.5) * 80,
-        pulse: Math.random(),
-        pulseSpeed: 0.004 + Math.random() * 0.006,
+        x: (Math.floor(Math.random() * gridX) + 0.5) * 90,
+        y: (Math.floor(Math.random() * gridY) + 0.5) * 90,
+        pulse: Math.random() * Math.PI * 2,
+        pulseSpeed: 0.008 + Math.random() * 0.012,
+        isCopper: Math.random() > 0.45,
       });
     }
-    // Build traces (L-shaped paths between nearby nodes)
+    // Build traces (orthogonal PCB tracks)
     TRACES.length = 0;
     for (let i = 0; i < NODES.length; i++) {
       const candidates = NODES
         .map((n, j) => ({ j, d: Math.hypot(n.x - NODES[i].x, n.y - NODES[i].y) }))
-        .filter(c => c.j !== i && c.d < 320 && c.d > 60)
+        .filter(c => c.j !== i && c.d < 360 && c.d > 70)
         .sort((a, b) => a.d - b.d)
         .slice(0, 2);
       for (const c of candidates) {
         if (!TRACES.find(t => (t.a === c.j && t.b === i) || (t.a === i && t.b === c.j))) {
-          TRACES.push({ a: i, b: c.j, progress: 0, speed: 0.0008 + Math.random() * 0.001, active: Math.random() > 0.4 });
+          TRACES.push({
+            a: i,
+            b: c.j,
+            progress: Math.random(),
+            speed: 0.0016 + Math.random() * 0.0024,
+            isCopper: NODES[i].isCopper
+          });
         }
       }
     }
   }
   initNodes();
-  window.addEventListener('resize', initNodes);
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
 
     // Draw traces
     for (const t of TRACES) {
-      if (!t.active) continue;
       t.progress += t.speed;
-      if (t.progress > 1.3) t.progress = 0;
+      if (t.progress > 1.25) t.progress = 0;
 
       const na = NODES[t.a], nb = NODES[t.b];
-      const mid = { x: nb.x, y: na.y }; // L-shape via horizontal then vertical
+      const mid = { x: nb.x, y: na.y }; // L-shaped PCB bend
+
+      // Mouse proximity boost
+      const dMouse = Math.min(
+        Math.hypot(na.x - mouse.x, na.y - mouse.y),
+        Math.hypot(nb.x - mouse.x, nb.y - mouse.y),
+        Math.hypot(mid.x - mouse.x, mid.y - mouse.y)
+      );
+      const mouseBoost = dMouse < 180 ? (1 - dMouse / 180) * 0.35 : 0;
 
       // Base trace line
       ctx.beginPath();
       ctx.moveTo(na.x, na.y);
       ctx.lineTo(mid.x, mid.y);
       ctx.lineTo(nb.x, nb.y);
-      ctx.strokeStyle = 'rgba(30,30,40,0.9)';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = t.isCopper 
+        ? `rgba(224, 48, 42, ${0.14 + mouseBoost})` 
+        : `rgba(90, 115, 160, ${0.12 + mouseBoost})`;
       ctx.stroke();
 
-      // Travelling pulse
-      if (t.progress < 1) {
+      // Travelling data pulse with luminous head and halo
+      if (t.progress >= 0 && t.progress <= 1) {
         const totalLen = Math.abs(nb.x - na.x) + Math.abs(nb.y - na.y);
         const travelDist = t.progress * totalLen;
         const seg1 = Math.abs(nb.x - na.x);
@@ -2658,41 +2772,55 @@ requestAnimationFrame(tickCursor);
           py = na.y;
         } else {
           px = nb.x;
-          py = na.y + (nb.y - na.y) * ((travelDist - seg1) / Math.abs(nb.y - na.y));
+          py = na.y + (nb.y - na.y) * ((travelDist - seg1) / (Math.abs(nb.y - na.y) || 1));
         }
-        const grad = ctx.createRadialGradient(px, py, 0, px, py, 10);
-        grad.addColorStop(0, 'rgba(224,48,42,0.7)');
-        grad.addColorStop(0.4, 'rgba(224,48,42,0.15)');
-        grad.addColorStop(1, 'transparent');
+
+        ctx.save();
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = t.isCopper ? '#ff4a40' : '#4d9de0';
+
+        // Pulse head
         ctx.beginPath();
-        ctx.arc(px, py, 10, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
+        ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = t.isCopper ? '#ffffff' : '#e0f2fe';
         ctx.fill();
+
+        // Outer halo
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, Math.PI * 2);
+        ctx.fillStyle = t.isCopper ? 'rgba(255,74,64,0.35)' : 'rgba(77,157,224,0.35)';
+        ctx.fill();
+        ctx.restore();
       }
     }
 
-    // Draw nodes
+    // Draw PCB solder vias and nodes
     for (const n of NODES) {
       n.pulse += n.pulseSpeed;
       const p = (Math.sin(n.pulse) + 1) / 2;
-      const alpha = 0.12 + p * 0.18;
+      const dMouse = Math.hypot(n.x - mouse.x, n.y - mouse.y);
+      const mouseBoost = dMouse < 160 ? (1 - dMouse / 160) * 0.45 : 0;
 
-      // Node dot
+      // Outer copper via ring
       ctx.beginPath();
-      ctx.arc(n.x, n.y, 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(50,50,70,${alpha + 0.2})`;
+      ctx.arc(n.x, n.y, 4, 0, Math.PI * 2);
+      ctx.strokeStyle = n.isCopper 
+        ? `rgba(224, 75, 60, ${0.4 + p * 0.35 + mouseBoost})` 
+        : `rgba(90, 130, 190, ${0.35 + p * 0.3 + mouseBoost})`;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // Inner via hole
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 1.6, 0, Math.PI * 2);
+      ctx.fillStyle = '#07070a';
       ctx.fill();
 
-      // Occasional node glow
-      if (p > 0.8) {
-        const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, 18);
-        g.addColorStop(0, `rgba(224,48,42,${(p - 0.8) * 0.3})`);
-        g.addColorStop(1, 'transparent');
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, 18, 0, Math.PI * 2);
-        ctx.fillStyle = g;
-        ctx.fill();
-      }
+      // Center solder dot
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 1, 0, Math.PI * 2);
+      ctx.fillStyle = n.isCopper ? 'rgba(255, 120, 100, 0.8)' : 'rgba(120, 180, 255, 0.8)';
+      ctx.fill();
     }
 
     requestAnimationFrame(draw);
@@ -3363,7 +3491,7 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
   updateGenerator();
 })();
 
-// ── Hero Word Cycler ──
+// ── Hero 3D Word Rotator ──
 (function() {
   const words = [
     'your website',
@@ -3371,24 +3499,24 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
     'your documentation',
     'your GitHub project',
     'your hardware store',
-    'your DIY tutorial'
+    'your maker tutorial'
   ];
-  const el = document.getElementById('hero-cycle-badge');
+  const el = document.getElementById('hero-dynamic-word');
   if (!el) return;
   let idx = 0;
   setInterval(() => {
-    el.classList.add('leaving');
+    el.classList.add('flip-out');
     setTimeout(() => {
       idx = (idx + 1) % words.length;
       el.textContent = words[idx];
-      el.classList.remove('leaving');
-      el.classList.add('entering');
+      el.classList.remove('flip-out');
+      el.classList.add('flip-in');
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          el.classList.remove('entering');
+          el.classList.remove('flip-in');
         });
       });
-    }, 320);
+    }, 220);
   }, 2600);
 })();
 
