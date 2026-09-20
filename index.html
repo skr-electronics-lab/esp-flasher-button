@@ -1610,6 +1610,10 @@ td code { font-family: var(--mono); font-size: 11px; background: var(--surf2); p
             <input type="checkbox" id="erase-chk" />
             <span>Erase Flash Before Writing (<code>erase-first</code>)</span>
           </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="wifi-prov-chk" checked />
+            <span>Wi-Fi Provisioning (<code>wifi="true"</code>)</span>
+          </label>
         </div>
 
         <!-- Live Preview Stage -->
@@ -1739,6 +1743,10 @@ td code { font-family: var(--mono); font-size: 11px; background: var(--surf2); p
                   <input type="checkbox" id="mfg-new-image" />
                   <span>New image (erase before write)</span>
                 </label>
+                <label class="mfg-check-label">
+                  <input type="checkbox" id="mfg-improv" checked />
+                  <span>Wi-Fi Provisioning (Improv Serial)</span>
+                </label>
               </div>
             </div>
 
@@ -1806,6 +1814,7 @@ ATTRIBUTES (observed by the component):
   theme — Button visual style. One of: red, dark, green, light, ghost, minimal. (default: "red")
   erase-first — Boolean attribute. When present, erases all flash before writing. Also togglable as a checkbox in UI.
   baud — Flash baud rate (default: 460800). Max 921600. Automatically reduced to 115200 for ESP8266/ESP8285 to prevent brownout.
+  wifi — Enable/disable post-flash Wi-Fi provisioning (default: true). Set wifi="false" or no-wifi to show only Serial Monitor.
 
 BUTTON THEMES (Shadow DOM CSS — SHADOW_CSS const):
   red (default): Bold pill shape, border-radius 100px, linear-gradient(135deg,#e03030,#b81f1f), font-weight 700, box-shadow 0 2px 12px rgba(224,48,48,0.35)
@@ -2253,6 +2262,7 @@ document.querySelector(<span class="c-str">'esp-flash-button'</span>)
           <tr><td class="td-mono">theme</td><td><code>"red"</code></td><td>Button theme: <code>red</code>, <code>dark</code>, <code>green</code>, <code>ghost</code>, or <code>minimal</code>.</td></tr>
           <tr><td class="td-mono">erase-first</td><td><code>false</code></td><td>Boolean. When present, erases the full flash before writing. Also toggleable in the UI.</td></tr>
           <tr><td class="td-mono">baud</td><td><code>460800</code></td><td>Default flash baud rate. Selectable by users in the modal (921600 Turbo, 460800 Fast, 230400 Balanced, 115200 Safe / ESP8266).</td></tr>
+          <tr><td class="td-mono">wifi</td><td><code>true</code></td><td>Boolean. Enable or disable post-flash Improv Serial Wi-Fi provisioning modal. Set <code>wifi="false"</code> or add <code>no-wifi</code> to show only the Serial Monitor button.</td></tr>
         </tbody>
       </table>
     </div>
@@ -3454,12 +3464,14 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
     const baud    = document.getElementById('mfg-baud')?.value;
     const compress= document.getElementById('mfg-compress')?.checked   ?? true;
     const newImg  = document.getElementById('mfg-new-image')?.checked  ?? false;
+    const improv  = document.getElementById('mfg-improv')?.checked     ?? true;
     const chips   = getSelectedChips();
     const parts   = getParts();
 
     const manifest = { name, version };
     if (desc) manifest.description = desc;
     if (newImg) manifest.newImage = true;
+    if (!improv) manifest.improv = false;
 
     const flashSettings = {};
     if (mode && mode !== 'keep') flashSettings.mode = mode;
@@ -3490,7 +3502,7 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
   });
 
   // Live update on input change
-  ['mfg-name','mfg-ver','mfg-desc','mfg-mode','mfg-freq','mfg-baud','mfg-compress','mfg-new-image'].forEach(id => {
+  ['mfg-name','mfg-ver','mfg-desc','mfg-mode','mfg-freq','mfg-baud','mfg-compress','mfg-new-image','mfg-improv'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', updateManifest);
     document.getElementById(id)?.addEventListener('input', updateManifest);
   });
@@ -3561,6 +3573,7 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
   const srcModeRadios = document.querySelectorAll('input[name="src-mode"]');
   const chkFull = document.getElementById('size-fullwidth-chk');
   const chkErase = document.getElementById('erase-chk');
+  const chkWifi = document.getElementById('wifi-prov-chk');
   const themePills = document.querySelectorAll('.theme-pill');
   const btn = document.getElementById('playground-btn');
   const codeEl = document.getElementById('playground-code');
@@ -3578,6 +3591,7 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
     const sourceVal = sourceInput ? sourceInput.value.trim() : '';
     const isFull = chkFull ? chkFull.checked : false;
     const isErase = chkErase ? chkErase.checked : false;
+    const isWifi = chkWifi ? chkWifi.checked : true;
 
     // UI displays
     if (badge) badge.textContent = `size="${sz}"`;
@@ -3604,6 +3618,12 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
       btn.setAttribute('erase-first', '');
     } else {
       btn.removeAttribute('erase-first');
+    }
+
+    if (isWifi) {
+      btn.removeAttribute('wifi');
+    } else {
+      btn.setAttribute('wifi', 'false');
     }
 
     // Live preview always uses demo manifest — GitHub mode only affects generated code
@@ -3636,6 +3656,9 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
     if (isErase) {
       attrs.push(`  erase-first`);
     }
+    if (!isWifi) {
+      attrs.push(`  wifi="false"`);
+    }
 
     const codeSnippet = `&lt;script type="module" src="https://skr-electronics-lab.github.io/esp-flasher-button/esp-flasher-button.js"&gt;&lt;/script&gt;\n\n&lt;esp-flasher-button \n${attrs.join('\n')}&gt;\n&lt;/esp-flasher-button&gt;`;
 
@@ -3659,6 +3682,7 @@ document.getElementById('ai-copy-btn')?.addEventListener('click', function() {
   if (sourceInput) sourceInput.addEventListener('input', updateGenerator);
   if (chkFull) chkFull.addEventListener('change', updateGenerator);
   if (chkErase) chkErase.addEventListener('change', updateGenerator);
+  if (chkWifi) chkWifi.addEventListener('change', updateGenerator);
 
   srcModeRadios.forEach(r => {
     r.addEventListener('change', () => {

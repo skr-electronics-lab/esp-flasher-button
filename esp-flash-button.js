@@ -27,6 +27,7 @@
  *   erase-first   — Erase flash before writing (default: off)
  *   baud          — Flash baud rate (default: 460800)
  *   theme         — Button theme: "red" | "dark" | "green" | "light" | "ghost" | "minimal" (default: "red")
+ *   wifi          — Enable/disable Wi-Fi provisioning: "true" (default) | "false" (or no-wifi)
  *
  * Powered by esptool-js (Espressif).
  */
@@ -402,7 +403,7 @@
     }
 
     static get observedAttributes() {
-      return ['manifest', 'github', 'label', 'erase-first', 'baud', 'theme', 'size', 'width', 'height', 'radius', 'full-width', 'fullwidth', 'block'];
+      return ['manifest', 'github', 'label', 'erase-first', 'baud', 'theme', 'size', 'width', 'height', 'radius', 'full-width', 'fullwidth', 'block', 'wifi', 'no-wifi', 'improv'];
     }
 
     attributeChangedCallback() { if (this.isConnected) this._render(); }
@@ -427,6 +428,24 @@
     get _theme()       {
       const t = this.getAttribute('theme') || 'red';
       return ['red','dark','green','light','ghost','minimal'].includes(t) ? t : 'red';
+    }
+    get _isWifiEnabled() {
+      if (this.hasAttribute('no-wifi')) {
+        const val = this.getAttribute('no-wifi');
+        if (val !== 'false') return false;
+      }
+      if (this.hasAttribute('wifi')) {
+        const val = (this.getAttribute('wifi') || '').toLowerCase().trim();
+        if (val === 'false' || val === '0' || val === 'off' || val === 'no') return false;
+      }
+      if (this.hasAttribute('improv')) {
+        const val = (this.getAttribute('improv') || '').toLowerCase().trim();
+        if (val === 'false' || val === '0' || val === 'off' || val === 'no') return false;
+      }
+      if (this._manifest) {
+        if (this._manifest.improv === false || this._manifest.wifi === false) return false;
+      }
+      return true;
     }
 
     _parseButtonSizing() {
@@ -1884,12 +1903,13 @@
 
         /* ── Post-Flash Success Actions ── */
         .__efb-succ-actions {
-          display: grid;
-          grid-template-columns: 1.15fr 1fr;
+          display: flex;
           gap: 8px;
           margin-top: 4px;
         }
         .__efb-succ-btn {
+          flex: 1;
+          min-width: 0;
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -1902,6 +1922,7 @@
           border: none;
           transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
           font-family: inherit;
+          white-space: nowrap;
         }
         .__efb-succ-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
         .__efb-succ-btn-serial {
@@ -2208,7 +2229,7 @@
           .__efb-details-content { grid-template-columns: 1fr 1fr; }
           .__efb-confirm-baudrow { flex-direction: column; align-items: stretch; gap: 8px; }
           .__efb-confirm-baud-select { width: 100%; }
-          .__efb-succ-actions { grid-template-columns: 1fr; }
+          .__efb-succ-actions { flex-direction: column; }
           .__efb-footer {
             padding: 10px 14px;
             flex-direction: column-reverse;
@@ -3541,22 +3562,21 @@
       const successEl = this._modal?.querySelector('#__efb-success');
       if (successEl) {
         successEl.style.display = 'block';
+        const showWifi = this._isWifiEnabled;
         successEl.innerHTML = `
-          <div class="__efb-succ">
-            <div class="__efb-succ-head">
-              <svg class="__efb-checkmark" viewBox="0 0 52 52">
-                <circle class="__efb-check-circle" cx="26" cy="26" r="25"/>
-                <path class="__efb-check-path" d="M14 27l7 7 16-16"/>
+          <div class="__efb-succ-wrap">
+            <div class="__efb-succ-icon-ring">
+              <svg viewBox="0 0 52 52">
+                <circle cx="26" cy="26" r="23"/>
+                <path d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
               </svg>
-              <div>
-                <div class="__efb-succ-title">Firmware installed</div>
-                <div class="__efb-succ-sub">Device is flashed and rebooting</div>
-              </div>
             </div>
+            <div class="__efb-succ-title">Firmware Installed!</div>
+            <div class="__efb-succ-sub">Device flashed successfully and rebooted.</div>
             <div class="__efb-succ-meta">
               <span>${this._esc(chip || '—')}</span>
               <span>${this._esc(flashSize)}</span>
-              <span>${duration}s</span>
+              <span>${parts.length ? ((parts.reduce((a, p) => a + (p.data?.byteLength || 0), 0) / 1024).toFixed(0)) + ' KB total' : ''}</span>
               <span>${filesCount} file${filesCount !== 1 ? 's' : ''}</span>
             </div>
             ${md5Results.length ? `
@@ -3575,9 +3595,11 @@
               <button class="__efb-succ-btn __efb-succ-btn-serial" id="__efb-succ-open-monitor" title="View boot logs in Serial Monitor">
                 ${ICONS.terminal} <span>Open Serial Monitor</span>
               </button>
+              ${showWifi ? `
               <button class="__efb-succ-btn __efb-succ-btn-wifi" id="__efb-succ-open-wifi" title="Set up Wi-Fi over USB Serial">
                 ${ICONS.wifi} <span>Configure Wi-Fi</span>
               </button>
+              ` : ''}
             </div>
           </div>
         `;
@@ -3587,9 +3609,11 @@
           await this._openSerialMonitor(115200);
         });
 
-        successEl.querySelector('#__efb-succ-open-wifi')?.addEventListener('click', () => {
-          this._showWifiProvisioning();
-        });
+        if (showWifi) {
+          successEl.querySelector('#__efb-succ-open-wifi')?.addEventListener('click', () => {
+            this._showWifiProvisioning();
+          });
+        }
       }
 
       const hasPort = !!this._port;

@@ -47,6 +47,7 @@ Web Serial is supported ONLY on desktop Chromium browsers (Google Chrome 89+, Mi
 | `full-width` | `boolean` | `false` | Stretches button across 100% of parent container. |
 | `erase-first` | `boolean` | `false` | When present, erases full chip flash before writing. |
 | `baud` | `number` | `460800` | Flashing baud rate (`921600`, `460800`, `230400`, `115200`). |
+| `wifi` | `boolean \| string` | `true` | Enable/disable post-flash Wi-Fi provisioning. Set `wifi="false"` or `no-wifi` to show only Serial Monitor. |
 
 ---
 
@@ -70,6 +71,7 @@ The manifest describes firmware binaries, target chip families, and optional SPI
   "name": "My ESP32 Project",
   "version": "1.0.0",
   "description": "Multi-partition firmware for ESP32",
+  "improv": true,
   "new_install_prompt_erase": true,
   "flashSettings": {
     "mode": "dio",

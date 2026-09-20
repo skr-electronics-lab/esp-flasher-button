@@ -108,6 +108,7 @@ Wrap any custom HTML button, link, or card using `slot="activate"` to keep your 
 | `full-width` | off | Stretches button across 100% of parent width. |
 | `erase-first` | off | Erases entire flash before writing. |
 | `baud` | `460800` | Flash baud rate (`921600`, `460800`, `230400`, `115200`). |
+| `wifi` | `true` | Enable/disable post-flash Wi-Fi provisioning. Set `wifi="false"` or `no-wifi` to show only Serial Monitor. |
 
 ---
 
@@ -120,6 +121,7 @@ Your `manifest.json` describes the firmware files and flash settings. Ensure you
   "name": "My ESP32 Project",
   "version": "1.0.0",
   "description": "Firmware installation for ESP32 microcontroller",
+  "improv": true,
   "flashSettings": {
     "mode": "dio",
     "freq": "40m",
