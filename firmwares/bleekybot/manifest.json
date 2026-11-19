@@ -1,0 +1,29 @@
+{
+  "name": "BleekyBot Firmware",
+  "version": "1.0.1",
+  "description": "BleekyBot firmware for the ESP32-C3 Super Mini",
+  "newImage": true,
+  "flashSettings": {
+    "mode": "dio",
+    "freq": "80m",
+    "flashSize": "4MB",
+    "baud": 460800,
+    "compress": true
+  },
+  "builds": [
+    {
+      "chipFamily": "ESP32-C3",
+      "flashSettings": {
+        "mode": "dio",
+        "freq": "80m",
+        "flashSize": "4MB"
+      },
+      "parts": [
+        {
+          "path": "BleekyBot-V1-esp32c3.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}
